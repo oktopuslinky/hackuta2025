@@ -4,22 +4,41 @@ This project was created for HackUTA 2025.
 
 ## Description
 
-A short and concise description of the project.
+This project is a full-stack web application with a React frontend and a Node.js backend.
 
 ## Setup
 
-Instructions on how to set up and run the project locally.
+To get the project running locally, you will need to set up both the frontend and the backend separately.
 
-```bash
-# Example setup commands
-npm install
-npm start
-```
+### Backend
 
-## Backend
+1.  Navigate to the `backend` directory:
+    ```bash
+    cd backend
+    ```
 
-Information about the backend.
+2.  Install the dependencies:
+    ```bash
+    npm install
+    ```
 
-## Frontend
+3.  Start the backend server:
+    ```bash
+    npm start
+    ```
 
-Information about the frontend.
+### Frontend
+
+1.  In a new terminal, navigate to the `frontend` directory:
+    ```bash
+    cd frontend
+    ```
+
+2.  Install the dependencies:
+    ```bash
+    npm install
+    ```
+
+3.  Start the frontend development server:
+    ```bash
+    npm run dev
