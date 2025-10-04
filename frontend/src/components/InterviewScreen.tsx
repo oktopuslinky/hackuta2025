@@ -1,3 +1,4 @@
+import { useAuth0 } from '@auth0/auth0-react';
 import { useState, useRef, useEffect } from 'react';
 
 interface Message {
@@ -7,6 +8,7 @@ interface Message {
 }
 
 const CleanInterviewScreen = () => {
+  const { loginWithRedirect, logout, isAuthenticated } = useAuth0();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -76,19 +78,43 @@ const CleanInterviewScreen = () => {
 
       {/* Header with Login */}
       <div style={{ position: 'absolute', top: 0, right: 0, padding: '24px', zIndex: 50 }}>
-        <button className="login-btn" style={{
-          padding: '10px 24px',
-          borderRadius: '9999px',
-          background: 'linear-gradient(to right, #f97316, #ea580c)',
-          color: 'white',
-          fontWeight: 500,
-          border: 'none',
-          cursor: 'pointer',
-          transition: 'all 0.3s',
-          boxShadow: '0 4px 15px rgba(249, 115, 22, 0.25)'
-        }}>
-          Log In
-        </button>
+        {isAuthenticated ? (
+          <button
+            onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
+            className="login-btn"
+            style={{
+              padding: '10px 24px',
+              borderRadius: '9999px',
+              background: 'linear-gradient(to right, #f97316, #ea580c)',
+              color: 'white',
+              fontWeight: 500,
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'all 0.3s',
+              boxShadow: '0 4px 15px rgba(249, 115, 22, 0.25)',
+            }}
+          >
+            Log Out
+          </button>
+        ) : (
+          <button
+            onClick={() => loginWithRedirect()}
+            className="login-btn"
+            style={{
+              padding: '10px 24px',
+              borderRadius: '9999px',
+              background: 'linear-gradient(to right, #f97316, #ea580c)',
+              color: 'white',
+              fontWeight: 500,
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'all 0.3s',
+              boxShadow: '0 4px 15px rgba(249, 115, 22, 0.25)',
+            }}
+          >
+            Log In
+          </button>
+        )}
       </div>
 
       {showWelcome && messages.length === 0 ? (

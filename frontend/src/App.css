@@ -5,3 +5,10 @@
   text-align: center;
   width: 100%;
 }
+
+
+.orange-login-btn {
+  background-color: orange;
+  color: white;
+  border: none;
+}
