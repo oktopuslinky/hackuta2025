@@ -5,6 +5,7 @@ import LogoutButton from './components/LogoutButton';
 import Profile from './components/Profile';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import ApiTest from './components/ApiTest';
+import InterviewScreen from './components/InterviewScreen';
 import './App.css';
 
 function App() {
@@ -19,7 +20,7 @@ function App() {
       </nav>
       {isAuthenticated ? <LogoutButton /> : <LoginButton />}
       <Routes>
-        <Route path="/" element={<h1>Home</h1>} />
+        <Route path="/" element={<InterviewScreen />} />
         <Route path="/profile" element={<ProtectedRoute component={Profile} />} />
         <Route path="/api-test" element={<ProtectedRoute component={ApiTest} />} />
       </Routes>

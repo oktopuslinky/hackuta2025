@@ -1,10 +1,12 @@
-# HackUTA 2025 Project
+# Talkitout - AI-Powered Interview Coach
 
 This project was created for HackUTA 2025.
 
 ## Description
 
-This project is a full-stack web application with a React frontend and a Node.js backend.
+Talkitout is an AI-powered interview coaching application designed to help users practice their interviewing skills in a safe and encouraging environment. The application features a chat interface where users can interact with an AI coach, receive feedback, and improve their confidence.
+
+The frontend is built with React and TypeScript, focusing on a clean, modern, and empathetic user interface.
 
 ## Setup
 
