@@ -14,6 +14,7 @@ const CleanInterviewScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -39,6 +40,17 @@ const CleanInterviewScreen = () => {
         setIsLoading(false);
       }, 1500);
     }
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      const file = event.target.files[0];
+      setInput(`File selected: ${file.name}`);
+    }
+  };
+
+  const handleFileButtonClick = () => {
+    fileInputRef.current?.click();
   };
 
   return (
@@ -174,11 +186,17 @@ const CleanInterviewScreen = () => {
                 border: '1px solid rgba(82, 82, 82, 0.3)',
                 padding: '16px 24px'
               }}>
-                <button style={{ color: '#a1a1aa', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }} className="icon-btn">
+                <button onClick={handleFileButtonClick} style={{ color: '#a1a1aa', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }} className="icon-btn">
                   <svg style={{ width: '20px', height: '20px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                   </svg>
                 </button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  style={{ display: 'none' }}
+                />
                 <input
                   type="text"
                   value={input}
@@ -382,11 +400,17 @@ const CleanInterviewScreen = () => {
                   border: '1px solid rgba(82, 82, 82, 0.3)',
                   padding: '16px 24px'
                 }}>
-                  <button style={{ color: '#a1a1aa', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }} className="icon-btn">
+                  <button onClick={handleFileButtonClick} style={{ color: '#a1a1aa', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }} className="icon-btn">
                     <svg style={{ width: '20px', height: '20px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                     </svg>
                   </button>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    style={{ display: 'none' }}
+                  />
                   <input
                     type="text"
                     value={input}
