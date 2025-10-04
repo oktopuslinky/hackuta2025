@@ -1,4 +1,4 @@
-# Talkitout - AI-Powered Interview Coach
+# Talkitout - AI-Powered Communication Buddy
 
 This project was created for HackUTA 2025.
 
