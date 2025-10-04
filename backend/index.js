@@ -3,6 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const { auth } = require('express-oauth2-jwt-bearer');
 
+const elevenRoutes = require('./eleven');
+
 const app = express();
 const port = 3001;
 
@@ -28,6 +30,8 @@ app.get('/api/private', checkJwt, (req, res) => {
     message: 'Hello from a private endpoint! You need to be authenticated to see this.'
   });
 });
+
+app.use('/api/eleven', elevenRoutes);
 
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
