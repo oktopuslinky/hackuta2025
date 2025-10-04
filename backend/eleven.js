@@ -10,38 +10,70 @@ const elevenlabs = new ElevenLabsClient({
     apiKey: process.env.ELEVEN_API_KEY,
 });
 
-router.post('/speech-to-text', upload.single('audio_file'), async (req, res) => {
-  console.log('Received request for speech-to-text...');
+router.post('/sst', upload.single('audioFile'), async (req, res) => {
 
     try {
-        // Check if a file was uploaded
+        //check if file exist
         if (!req.file) {
-            return res.status(400).json({ error: 'No audio file uploaded.' });
+            return res.status(400).json({ error: 'audio file missing' });
         }
         
-        console.log(`Processing file: ${req.file.originalname} (${req.file.size} bytes)`);
+        //AudiO buff defined
+        const audioBuff = req.file.buffer;
 
-        // The uploaded file is available as a Buffer in req.file.buffer
-        const audioBuffer = req.file.buffer;
-
-        // 4. Call the ElevenLabs API with the audio buffer
+        //create audios stream
         const transcription = await elevenlabs.speechToText.convert({
-            file: audioBuffer,
-            modelId: 'scribe_v1', // Or the latest supported model
+            file: audioBuff,
+            modelId: 'scribe_v1',
             tagAudioEvents: true,
-            languageCode: 'eng', // Using a specific code can improve accuracy
+            languageCode: 'eng', 
             diarize: true,
         });
         
-        console.log('Transcription successful.');
-        
-        // 5. Return the transcription result
+        //output
         res.json(transcription);
 
     } catch (error) {
-        console.error('Error during speech-to-text conversion:', error);
-        res.status(500).json({ error: 'Failed to process audio file.' });
+        console.error('some Error:', error);
+        res.status(500).json({ error: 'cant process audio file' });
     }
 });
 
+
+router.post('/tts', async (req, res) => {
+
+  try {
+    //grab text jdsf
+    const { text, voiceId } = req.body;
+
+    //crash if text no existD
+    if (!text) {
+      return res.status(400).json({ error: 'no text' });
+    }
+
+    //create audio stream
+    const audioS = await elevenlabs.textToSpeech.convert(voiceId || 'JBFqnCBsd6RMkjVDRZzb', {
+      text: text,
+      modelId: 'eleven_multilingual_v2',
+      outputFormat: 'mp3_44100_128',
+    });
+
+    // set contet 
+    res.setHeader('Content-Type', 'audio/mpeg');
+
+
+    const chunksOfAudio = [];
+    for await (const chunk of audioS) {
+      chunks.push(chunk);
+    }
+    const result = Buffer.concat(chunksOfAudio);
+    res.send(result);
+
+
+
+  } catch (error) {
+    console.error('error during tts', error);
+    res.status(500).json({ error: 'failled to convert Tts' });
+  }
+});
 module.exports = router;

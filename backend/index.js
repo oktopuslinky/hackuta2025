@@ -6,6 +6,7 @@ const { auth } = require('express-oauth2-jwt-bearer');
 const elevenRoutes = require('./eleven');
 
 const app = express();
+app.use(express.json());
 const port = 3001;
 
 // This is a middleware that enables CORS (Cross-Origin Resource Sharing)
