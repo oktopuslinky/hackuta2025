@@ -1,16 +1,21 @@
+
+import { useEffect, useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
-import { useEffect } from 'react';
-// import LoginButton from './components/LoginButton';
-// import LogoutButton from './components/LogoutButton';
+
 import Profile from './components/Profile';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import ApiTest from './components/ApiTest';
 import InterviewScreen from './components/InterviewScreen';
+import Sidebar from './components/Sidebar';
+import VoiceInterface from './components/VoiceInterface';
+
 import './App.css';
 
+
 function App() {
-  const { isAuthenticated, isLoading, user } = useAuth0();
+  const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
+   const { isAuthenticated, isLoading, user } = useAuth0();
 
   useEffect(() => {
     console.log(user)
@@ -46,43 +51,24 @@ function App() {
     }
   }, [isAuthenticated, isLoading, user]);
 
+  const toggleSidebar = () => {
+    setSidebarCollapsed(!isSidebarCollapsed);
+  };
+
   return (
-    <>
-      {/* <nav>
-        <Link to="/">Home</Link>
-        {isAuthenticated && <Link to="/profile">Profile</Link>}
-        {isAuthenticated && <Link to="/api-test">API Test</Link>}
-      </nav> */}
-      {/* {isAuthenticated ? <LogoutButton /> : <LoginButton />} */}
-      <Routes>
-        <Route path="/" element={<InterviewScreen />} />
-        <Route path="/profile" element={<ProtectedRoute component={Profile} />} />
-        <Route path="/api-test" element={<ProtectedRoute component={ApiTest} />} />
-      </Routes>
-    </>
+    <div className={`app-layout ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+      <Sidebar isCollapsed={isSidebarCollapsed} toggleSidebar={toggleSidebar} />
+      <main className="main-content">
+        <Routes>
+          <Route path="/" element={<InterviewScreen />} />
+          <Route path="/interview" element={<InterviewScreen />} />
+          <Route path="/profile" element={<ProtectedRoute component={Profile} />} />
+          <Route path="/api-test" element={<ProtectedRoute component={ApiTest} />} />
+          <Route path="/voice-interface" element={<VoiceInterface />} />
+        </Routes>
+      </main>
+    </div>
   );
 }
 
 export default App;
-
-// import { Routes, Route } from 'react-router-dom';
-// import Profile from './components/Profile';
-// import { ProtectedRoute } from './components/ProtectedRoute';
-// import ApiTest from './components/ApiTest';
-// import InterviewScreen from './components/InterviewScreen';
-// import './App.css';
-
-// function App() {
-
-//   return (
-//     <>
-//       <Routes>
-//         <Route path="/" element={<InterviewScreen />} />
-//         <Route path="/profile" element={<ProtectedRoute component={Profile} />} />
-//         <Route path="/api-test" element={<ProtectedRoute component={ApiTest} />} />
-//       </Routes>
-//     </>
-//   );
-// }
-
-// export default App;
