@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useAuth0 } from '@auth0/auth0-react';
 import { useNavigate } from 'react-router-dom';
 
 interface Message {
@@ -8,6 +9,7 @@ interface Message {
 }
 
 const InterviewScreen = () => {
+  const { loginWithRedirect, logout, isAuthenticated } = useAuth0();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
