@@ -1,16 +1,17 @@
 {
-    "transcription": "Hey, how are you doing today? I am doing amazing. Tell me something interesting. Tell me more interesting things. Interesting. That is very interesting. That is so cool. Can you tell me more? Actually, don't tell me more. Tell me something else. Tell me another interesting fact.",
-    "emotional_tone": "Interested",
+    "transcription": "Hey, how are you doing today? I am doing amazing. Tell me something interesting. Tell me more interesting things. Interesting, that is very interesting. That is so cool. Can you tell me more? Actually, don't tell me more. Tell me something else, tell me another interesting fact.",
+    "emotional_tone": "Excited",
     "confidence": 90,
     "emotional_indicators": [
-        "Enthusiastic tone",
-        "Rapid pace",
-        "Varied intonation expressing excitement and curiosity",
-        "Emphasis on words like 'amazing,' 'interesting,' and 'cool'"
+        "Uplifted tone",
+        "Enthusiastic pace",
+        "Slightly elevated volume",
+        "Use of positive adjectives (amazing, interesting, cool)",
+        "Inquisitiveness (asking for more information)"
     ],
-    "nuances": "There's a strong sense of curiosity mixed with excitement, creating an overall positive and engaging tone. The speaker seems eager to learn new things and is genuinely enjoying the conversation.",
+    "nuances": "There's a playful curiosity present, suggesting an eagerness to learn and engage with the speaker.  The 'actually don't tell me more' indicates a slight flippancy or humor.",
     "secondary_emotions": [
-        "Excitement",
-        "Curiosity"
+        "Curious",
+        "Playful"
     ]
 }
