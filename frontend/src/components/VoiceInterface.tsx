@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import toWav from 'audiobuffer-to-wav';
 import { useNavigate } from 'react-router-dom';
 import './VoiceInterface.css';
-import { analyzeConversationEmotion } from '../emotionalToneDetection';
 
 const VoiceInterface: React.FC = () => {
   const [isConversationActive, setIsConversationActive] = useState(false);

@@ -22,6 +22,7 @@ const FileUploadPopup: React.FC<FileUploadPopupProps> = ({ onClose, onFilesUploa
   const handleUpload = () => {
     onFilesUpload(files);
     onClose();
+  
   };
 
   return (
