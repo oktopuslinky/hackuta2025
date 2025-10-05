@@ -40,6 +40,9 @@ const VoiceInterface: React.FC = () => {
     return 'female';
   });
   const navigate = useNavigate();
+  const [useSlang, setUseSlang] = useState<boolean>(() => {
+    try { return localStorage.getItem('talkitout:useSlang') === 'true'; } catch (e) { return false; }
+  });
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -252,7 +255,7 @@ const VoiceInterface: React.FC = () => {
       const geminiResponse = await fetch(geminiEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userTranscript, sessionId }),
+        body: JSON.stringify({ message: userTranscript, sessionId, slang: useSlang }),
       });
       const geminiData = await geminiResponse.json();
       const aiResponse = geminiData.response;
@@ -450,6 +453,14 @@ const VoiceInterface: React.FC = () => {
                   >
                     Male
                   </button>
+
+                  <div style={{ marginLeft: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <label style={{ color: '#a1a1aa' }}>Slang</label>
+                    <div onClick={() => { setUseSlang(!useSlang); try { localStorage.setItem('talkitout:useSlang', (!useSlang).toString()); } catch (e) {} }}
+                      style={{ width: '44px', height: '24px', borderRadius: '999px', background: useSlang ? 'linear-gradient(135deg,#f97316,#ea580c)' : '#2d2d2d', display: 'flex', alignItems: 'center', padding: '3px', cursor: 'pointer' }}>
+                      <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: 'white', transform: useSlang ? 'translateX(20px)' : 'translateX(0px)', transition: 'transform 0.15s' }} />
+                    </div>
+                  </div>
 
                   <button
                     className="prompt-btn"
