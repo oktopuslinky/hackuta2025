@@ -4,12 +4,12 @@ const cors = require('cors');
 const { auth } = require('express-oauth2-jwt-bearer');
 const mongoose = require('mongoose');
 const User = require('./models/User');
-
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('Successfully connected to MongoDB'))
-  .catch(err => console.error('Connection error', err));
- 
  const elevenRoutes = require('./eleven');
+const userRoutes = require('./routes/user');
+ 
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('MongoDB connected successfully'))
+  .catch(err => console.error('MongoDB connection error:', err));
  
 const app = express();
 app.use(express.json());
@@ -74,7 +74,8 @@ app.get('/api/private', checkJwt, findOrCreateUser, (req, res) => {
 });
 
 app.use('/api/eleven', elevenRoutes);
-
+app.use('/api/user', userRoutes);
+ 
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
 });

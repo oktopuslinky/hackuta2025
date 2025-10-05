@@ -1,20 +1,46 @@
 const mongoose = require('mongoose');
+const { v4: uuidv4 } = require('uuid');
+
+const chatSchema = new mongoose.Schema({
+  chatId: {
+    type: String,
+    default: uuidv4,
+    unique: true,
+  },
+  messages: [{
+    role: String,
+    content: String,
+    timestamp: {
+      type: Date,
+      default: Date.now,
+    },
+  }],
+});
 
 const userSchema = new mongoose.Schema({
-  auth0Id: {
+  firstName: {
     type: String,
     required: true,
-    unique: true
+  },
+  lastName: {
+    type: String,
+    required: true,
   },
   email: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
   },
-  name: String,
-  picture: String,
-}, { timestamps: true });
+  password: {
+    type: String,
+    required: true,
+  },
+  uid: {
+    type: String,
+    default: uuidv4,
+    unique: true,
+  },
+  chats: [chatSchema],
+});
 
-const User = mongoose.model('User', userSchema);
-
-module.exports = User;
+module.exports = mongoose.model('User', userSchema);
