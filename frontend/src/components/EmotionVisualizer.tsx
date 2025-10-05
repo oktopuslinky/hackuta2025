@@ -1,128 +1,200 @@
 import React, { useEffect, useState } from "react";
 import Plot from "react-plotly.js";
+import type { Data, Layout } from 'plotly.js';
+
+// Helper to calculate a simple moving average for the volume envelope
+function movingAverage(data: Float32Array, windowSize: number): Float32Array {
+  const result = new Float32Array(data.length);
+  let sum = 0;
+  for (let i = 0; i < data.length; i++) {
+    sum += data[i];
+    if (i >= windowSize) {
+      sum -= data[i - windowSize];
+    }
+    result[i] = sum / Math.min(i + 1, windowSize);
+  }
+  return result;
+}
+
+// Helper to parse time strings like "m:ss" into seconds
+function timestrToSeconds(ts: string): number {
+  const parts = ts.split(':').map(Number);
+  if (parts.length === 2) {
+    return parts[0] * 60 + parts[1];
+  }
+  return 0;
+}
 
 interface Segment {
   start: number;
   end: number;
+  duration: number;
   emotion: string;
 }
 
 export default function EmotionVisualizer() {
-  const [waveform, setWaveform] = useState<number[]>([]);
-  const [time, setTime] = useState<number[]>([]);
-  const [segments, setSegments] = useState<Segment[]>([]);
+  const [plotData, setPlotData] = useState<Data[]>([]);
+  const [plotLayout, setPlotLayout] = useState<Partial<Layout>>({});
+  const [loading, setLoading] = useState(true);
 
-  // 1️⃣ Load JSON and decode audio on mount
   useEffect(() => {
-    async function loadData() {
-      // Load JSON
-      try{
-        console.log('before analyiss')
+    async function createPlot() {
+      try {
+        // 1. Load JSON and Audio Data
         const json = await fetch("/detailed_analysis.json").then(res => res.json());
-        console.log('after analysis')
-
-        // Parse timestamps
-        const segs = Object.entries(json.timestamps).map(([range, emotion]) => {
-          const [start, end] = range.split("-").map(t => {
-            const [m, s] = t.split(":").map(Number);
-            return m * 60 + s;
-          });
-          return { start, end, emotion: emotion as string };
-        });
-        setSegments(segs);
-
-        // Decode audio waveform
         const audioCtx = new AudioContext();
         const audioData = await fetch("/audio.wav").then(r => r.arrayBuffer());
-        console.log(audioData)
         const decoded = await audioCtx.decodeAudioData(audioData);
         const channelData = decoded.getChannelData(0);
+        const sampleRate = decoded.sampleRate;
+        const timePoints = Array.from({ length: channelData.length }, (_, i) => i / sampleRate);
 
-        // Downsample to ~1000 points for plotting
-        const step = Math.floor(channelData.length / 1000);
-        const waveformPoints = [];
-        const timePoints = [];
-        for (let i = 0; i < channelData.length; i += step) {
-          waveformPoints.push(channelData[i]);
-          timePoints.push(i / decoded.sampleRate);
+        // Downsample for performance
+        const maxPoints = 20000;
+        const step = Math.max(1, Math.floor(channelData.length / maxPoints));
+        const plotTime = [];
+        const plotWaveform = [];
+        for (let i = 0; i < timePoints.length; i += step) {
+          plotTime.push(timePoints[i]);
+          plotWaveform.push(channelData[i]);
         }
-        setWaveform(waveformPoints);
-        setTime(timePoints);
-      }catch(e){
-        if (e instanceof Error) {
-          console.log(e.message)
+
+        // 2. Calculate Volume Envelope on DOWNSAMPLED data
+        const absAudio = new Float32Array(plotWaveform.map(Math.abs));
+        const effectiveSampleRate = sampleRate / step;
+        const windowSize = Math.floor(effectiveSampleRate * 0.025); // 25ms window
+        const envelope = movingAverage(absAudio, windowSize);
+
+        let maxEnv = 0;
+        for (let i = 0; i < envelope.length; i++) {
+          if (envelope[i] > maxEnv) {
+            maxEnv = envelope[i];
+          }
         }
+        const plotEnvelope = maxEnv > 0 ? Array.from(envelope.map(v => v / maxEnv)) : Array.from(envelope);
+
+        // 3. Parse Timestamps and Emotions
+        const primarySegments: Segment[] = Object.entries(json.timestamps).map(([range, emotion]) => {
+          const [start, end] = range.split("-").map(timestrToSeconds);
+          return { start, end, duration: end - start, emotion: emotion as string };
+        });
+        const maxSegmentEnd = primarySegments.reduce((max, seg) => Math.max(max, seg.end), 0);
+        const lastTimePoint = timePoints.length > 0 ? timePoints[timePoints.length - 1] : 0;
+        const totalDuration = Math.max(maxSegmentEnd, lastTimePoint);
+
+        const secondaryEmotions = json.secondary_emotions || [];
+        const secondarySegments: Segment[] = [];
+        if (secondaryEmotions.length > 0) {
+          const secLen = totalDuration / secondaryEmotions.length;
+          secondaryEmotions.forEach((emo: string, i: number) => {
+            const start = i * secLen;
+            const end = (i + 1) * secLen;
+            secondarySegments.push({ start, end, duration: end - start, emotion: emo });
+          });
+        }
+
+        // 4. Define Color Palette
+        const PALETTE = ["#FF7F7F", "#FFA07A", "#FFD580", "#C1E1C1", "#9FD3C7", "#9BC4F0", "#B39DF0", "#F2B6E3"];
+        const uniquePrimary = [...new Set(primarySegments.map(s => s.emotion))];
+        const colorMapPrimary = Object.fromEntries(uniquePrimary.map((e, i) => [e, PALETTE[i % PALETTE.length]]));
+        const uniqueSecondary = [...new Set(secondaryEmotions)];
+        const colorMapSecondary = Object.fromEntries(uniqueSecondary.map((e, i) => [e, PALETTE[(i + 4) % PALETTE.length]]));
+
+        // 5. Build Plotly Traces
+        const traces = [];
+
+        // Waveform Trace (Row 1)
+        traces.push({
+          x: plotTime,
+          y: plotWaveform,
+          mode: 'lines',
+          name: 'Waveform',
+          line: { color: "#2c3e50", width: 0.8 },
+          yaxis: 'y1',
+          hoverinfo: 'none',
+        });
+
+        // Volume Envelope Fill Trace (Row 1)
+        traces.push({
+          x: plotTime,
+          y: plotEnvelope,
+          fill: 'tozeroy',
+          fillcolor: 'rgba(100, 149, 237, 0.25)',
+          line: { width: 0 },
+          name: 'Volume',
+          yaxis: 'y1',
+          hovertemplate: 'Time: %{x:.2f}s<br>Volume: %{y:.2f}<extra></extra>',
+        });
+
+        // Primary Emotions Timeline (Row 2)
+        primarySegments.forEach(seg => {
+          traces.push({
+            type: 'bar',
+            x: [seg.duration],
+            y: ['Primary'],
+            base: seg.start,
+            orientation: 'h',
+            marker: { color: colorMapPrimary[seg.emotion] },
+            name: seg.emotion,
+            yaxis: 'y2',
+            hovertemplate: `<b>Primary: ${seg.emotion}</b><br>Duration: %{x:.2f}s<extra></extra>`,
+            showlegend: false,
+          });
+        });
+
+        // Secondary Emotions Timeline (Row 3)
+        secondarySegments.forEach(seg => {
+          traces.push({
+            type: 'bar',
+            x: [seg.duration],
+            y: ['Secondary'],
+            base: seg.start,
+            orientation: 'h',
+            marker: { color: colorMapSecondary[seg.emotion] },
+            name: seg.emotion,
+            yaxis: 'y3',
+            hovertemplate: `<b>Secondary: ${seg.emotion}</b><br>Duration: %{x:.2f}s<extra></extra>`,
+            showlegend: false,
+          });
+        });
+
+        setPlotData(traces);
+
+        // 6. Define Plotly Layout
+        setPlotLayout({
+          height: 800,
+          // @ts-expect-error The plotly.js types are incorrect for string templates
+          template: 'plotly_white',
+          title: { text: "Audio Emotion Analysis — Waveform + Timelines", x: 0.5 },
+          margin: { l: 120, r: 30, t: 100, b: 80 },
+          hovermode: 'x unified',
+          xaxis: { title: { text: 'Time (seconds)' }, range: [0, totalDuration] },
+          yaxis: { domain: [0.6, 1.0], title: { text: 'Waveform' } },
+          yaxis2: { domain: [0.3, 0.55], title: { text: 'Primary Emotion' }, showticklabels: false },
+          yaxis3: { domain: [0.0, 0.25], title: { text: 'Secondary Emotion' }, showticklabels: false },
+          grid: { rows: 3, columns: 1, pattern: 'independent' },
+          showlegend: true,
+          legend: { orientation: "h", yanchor: "bottom", y: -0.2, xanchor: "center", x: 0.5 }
+        });
+
+      } catch (error) {
+        console.error("Failed to create plot:", error);
+      } finally {
+        setLoading(false);
       }
     }
-    
-    loadData()
-    
+
+    createPlot();
   }, []);
 
-  if (waveform.length === 0) return <p>Loading visualization...</p>;
-
-  // Create emotion shapes for background shading
-  const shapes = segments.map(seg => ({
-    type: "rect" as const,
-    xref: "x" as const,
-    yref: "paper" as const,
-    x0: seg.start,
-    x1: seg.end,
-    y0: 0,
-    y1: 1,
-    fillcolor: "rgba(0, 200, 255, 0.08)",
-    line: { width: 0 }
-  }));
-
-  // Vertical markers for emotion changes
-  const emotionMarkers = segments.map(seg => ({
-    type: "line" as const,
-    xref: "x" as const,
-    yref: "paper" as const,
-    x0: seg.start,
-    x1: seg.start,
-    y0: 0,
-    y1: 1,
-    line: { color: "rgba(0,0,0,0.2)", dash: "dot" as const }
-  }));
+  if (loading) return <p>Loading visualization...</p>;
 
   return (
     <Plot
-      data={[
-        {
-          x: time,
-          y: waveform,
-          type: "scatter" as const,
-          mode: "lines" as const,
-          name: "Waveform",
-          line: { color: "#0077cc" },
-          hoverinfo: "x+y"
-        },
-        {
-          x: segments.map(seg => (seg.start + seg.end) / 2),
-          y: segments.map(() => 0.9),
-          text: segments.map(seg => seg.emotion),
-          mode: "text" as const,
-          textposition: "top center" as const,
-          showlegend: false,
-        }
-      ]}
-      layout={{
-        title: { text: "🎧 Emotion Timeline + Waveform" },
-        xaxis: { title: { text: "Time (s)" } },
-        yaxis: { title: { text: "Amplitude" }, showgrid: false },
-        shapes: [...shapes, ...emotionMarkers],
-        plot_bgcolor: "#ffffff",
-        paper_bgcolor: "#ffffff",
-        hovermode: "x unified",
-        margin: { t: 50, l: 50, r: 30, b: 50 }
-      }}
-      config={{
-        responsive: true,
-        displayModeBar: true,
-        toImageButtonOptions: { format: "png", filename: "emotion_plot" }
-      }}
-      style={{ width: "100%", height: "600px" }}
+      data={plotData}
+      layout={plotLayout}
+      config={{ responsive: true }}
+      style={{ width: "100%", height: "800px" }}
     />
   );
 }
