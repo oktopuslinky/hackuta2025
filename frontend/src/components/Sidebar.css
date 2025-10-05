@@ -1,0 +1,103 @@
+.sidebar {
+  width: 260px;
+  height: 100vh;
+  background: #1a1a1a;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  transition: width 0.3s ease;
+}
+
+.sidebar.collapsed {
+  width: 80px;
+  padding: 20px 10px;
+  align-items: center;
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 40px;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: bold;
+  color: #f97316;
+}
+
+.sidebar-content {
+  flex-grow: 1;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  width: 100%;
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.sidebar.collapsed .profile {
+  justify-content: center;
+}
+
+.profile-picture {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 15px;
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-name {
+  font-weight: 600;
+}
+
+.profile-email {
+  font-size: 12px;
+  color: #a1a1aa;
+}
+
+.auth-button {
+  width: 100%;
+  padding: 10px 24px;
+  border-radius: 9999px;
+  background: linear-gradient(to right, #f97316, #ea580c);
+  color: white;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 15px rgba(249, 115, 22, 0.25);
+}
+
+.auth-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(249, 115, 22, 0.4);
+}
+
+.collapse-btn {
+  background: none;
+  border: none;
+  color: #a1a1aa;
+  cursor: pointer;
+  font-size: 24px;
+  padding: 0;
+}
+
+.collapse-btn:hover {
+  color: white;
+}

@@ -1,14 +1,17 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0;
-  text-align: center;
-  width: 100%;
+.app-layout {
+  display: flex;
+  height: 100vh;
+  background-color: #0f0f0f;
+  transition: padding-left 0.3s ease;
 }
 
+.main-content {
+  flex-grow: 1;
+  overflow-y: auto;
+  height: 100vh;
+  transition: margin-left 0.3s ease;
+}
 
-.orange-login-btn {
-  background-color: orange;
-  color: white;
-  border: none;
+.app-layout.sidebar-collapsed .main-content {
+  margin-left: 0;
 }
