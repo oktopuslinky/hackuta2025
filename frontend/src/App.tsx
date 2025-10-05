@@ -42,8 +42,7 @@ function MainApp() {
             throw new Error('Failed to add user');
           }
 
-          const data = await response.json();
-          console.log(data);
+          await response.json();
         } catch (error) {
           console.error(error);
         }
@@ -51,7 +50,7 @@ function MainApp() {
 
       addUser();
     }
-  }, [isAuthenticated, isLoading, user]);
+  }, [isAuthenticated, user]);
 
   const toggleSidebar = () => {
     setSidebarCollapsed(!isSidebarCollapsed);

@@ -1,5 +1,3 @@
-// frontend/src/components/landing/landing.tsx (fixed file)
-
 import { useState, useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { MessageCircle, Sparkles, Zap, Shield, Users, Search, Link2, Sun, Moon } from 'lucide-react';
@@ -97,7 +95,7 @@ const Hero = () => {
         </h1>
         <p className="hero-subtitle">
           <span className="hero-subtitle-highlight">Everyone deserves to be heard. </span>
-          Let's talk about it.
+          Let&apos;s talk about it.
         </p>
         <div className="hero-buttons">
           <Link to="/app">
