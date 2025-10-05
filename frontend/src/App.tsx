@@ -11,20 +11,20 @@ import Sidebar from './components/Sidebar';
 import VoiceInterface from './components/VoiceInterface';
 import EmotionVisualizer from './components/EmotionVisualizer';
 import HomePage from './components/HomePage';
+import Landing from './components/landing/landing';
 
 import './App.css';
 
-
 function App() {
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
-   const { isAuthenticated, isLoading, user } = useAuth0();
+  const { isAuthenticated, isLoading, user } = useAuth0();
 
   useEffect(() => {
-    console.log(user)
-    console.log(isLoading)
+    console.log(user);
+    console.log(isLoading);
     if (isAuthenticated && user) {
       const addUser = async () => {
-        console.log(user)
+        console.log(user);
         try {
           const response = await fetch('http://localhost:3001/api/user', {
             method: 'POST',
@@ -57,21 +57,33 @@ function App() {
     setSidebarCollapsed(!isSidebarCollapsed);
   };
 
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <div className={`app-layout ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-      <Sidebar isCollapsed={isSidebarCollapsed} toggleSidebar={toggleSidebar} />
-      <main className="main-content">
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/interview" element={<InterviewScreen />} />
-          <Route path="/communication" element={<CommunicationScreen />} />
-          <Route path="/profile" element={<ProtectedRoute component={Profile} />} />
-          <Route path="/api-test" element={<ProtectedRoute component={ApiTest} />} />
-          <Route path="/voice-interface/:mode" element={<VoiceInterface />} />
-          <Route path="/visualizer" element={<EmotionVisualizer />} />
-        </Routes>
-      </main>
-    </div>
+    <Routes>
+      <Route path="/landing" element={<Landing />} />
+      <Route
+        path="/*"
+        element={
+          <div className={`app-layout ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+            <Sidebar isCollapsed={isSidebarCollapsed} toggleSidebar={toggleSidebar} />
+            <main className="main-content">
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/interview" element={<InterviewScreen />} />
+                <Route path="/communication" element={<CommunicationScreen />} />
+                <Route path="/profile" element={<ProtectedRoute component={Profile} />} />
+                <Route path="/api-test" element={<ProtectedRoute component={ApiTest} />} />
+                <Route path="/voice-interface/:mode" element={<VoiceInterface />} />
+                <Route path="/visualizer" element={<EmotionVisualizer />} />
+              </Routes>
+            </main>
+          </div>
+        }
+      />
+    </Routes>
   );
 }
 
