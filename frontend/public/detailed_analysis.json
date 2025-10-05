@@ -1,0 +1,41 @@
+{
+    "transcription": "Hey, how are you doing today? I am doing amazing. Tell me something interesting. Tell me more interesting things. Interesting, that is very interesting. That is so cool. Can you tell me more? Actually, don't tell me more. Tell me something else. Tell me another interesting fact.",
+    "primary_emotion": "Excited",
+    "emotional_intensity": "Medium",
+    "emotional_stability": "Fluctuating",
+    "confidence_score": 90,
+    "vocal_characteristics": {
+        "tone": "Enthusiastic, curious",
+        "pace": "Normal to slightly fast",
+        "volume": "Normal",
+        "pitch": "Normal to slightly high"
+    },
+    "emotional_indicators": [
+        "Rapid speech indicating excitement",
+        "Use of words like 'amazing', 'interesting', 'cool' indicating positive emotion",
+        "Questioning tone suggesting curiosity",
+        "Slight indecision ('Actually, don't tell me more')",
+        "Emphasis on 'interesting' ",
+        "Repetition of requests indicating excitement"
+    ],
+    "emotional_transitions": [
+        "Initial greeting in a neutral tone, transitioning to excitement upon responding",
+        "Brief moment of indecision when asking for more information and then retracting the request"
+    ],
+    "overall_mood": "Overall positive and excited, driven by curiosity and enthusiasm.",
+    "secondary_emotions": [
+        "Curiosity",
+        "Interest"
+    ],
+    "timestamps": {
+        "0:00-0:01": "Neutral",
+        "0:01-0:03": "Excited",
+        "0:03-0:10": "Curious and enthusiastic",
+        "0:10-0:14": "Excited and impressed",
+        "0:14-0:15": "Hopeful",
+        "0:15-0:16": "Indecisive",
+        "0:16-0:20": "Curious and enthusiastic"
+    },
+    "wpm": "Approximately 100-120",
+    "recommendations": "The speaker should try to control the rate of their speech to maintain engagement from other people. The enthusiasm is appreciated but at too high intensity, it might come off overbearing."
+}
