@@ -4,8 +4,8 @@ const { v4: uuidv4 } = require('uuid');
 const chatSchema = new mongoose.Schema({
   chatId: {
     type: String,
-    default: uuidv4,
-    unique: true,
+    default: uuidv4
+    
   },
   messages: [{
     role: String,
@@ -18,11 +18,12 @@ const chatSchema = new mongoose.Schema({
 });
 
 const userSchema = new mongoose.Schema({
-  firstName: {
+  auth0Id: {
     type: String,
+    unique: true,
     required: true,
   },
-  lastName: {
+  name: {
     type: String,
     required: true,
   },
@@ -30,17 +31,9 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
+
   },
-  password: {
-    type: String,
-    required: true,
-  },
-  uid: {
-    type: String,
-    default: uuidv4,
-    unique: true,
-  },
-  chats: [chatSchema],
+  chats: [],
 });
 
 module.exports = mongoose.model('User', userSchema);

@@ -1,5 +1,6 @@
 import { Routes, Route, Link } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
+import { useEffect } from 'react';
 import LoginButton from './components/LoginButton';
 import LogoutButton from './components/LogoutButton';
 import Profile from './components/Profile';
@@ -8,7 +9,41 @@ import ApiTest from './components/ApiTest';
 import './App.css';
 
 function App() {
-  const { isAuthenticated } = useAuth0();
+  const { isAuthenticated, isLoading, user } = useAuth0();
+
+  useEffect(() => {
+    console.log(user)
+    console.log(isLoading)
+    if (isAuthenticated && user) {
+      const addUser = async () => {
+        console.log(user)
+        try {
+          const response = await fetch('http://localhost:3001/api/user', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              name: user.name,
+              email: user.email,
+              auth0Id: user.sub,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to add user');
+          }
+
+          const data = await response.json();
+          console.log(data);
+        } catch (error) {
+          console.error(error);
+        }
+      };
+
+      addUser();
+    }
+  }, [isAuthenticated, isLoading, user]);
 
   return (
     <>
