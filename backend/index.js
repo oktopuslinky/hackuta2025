@@ -2,9 +2,14 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { auth } = require('express-oauth2-jwt-bearer');
+const mongoose = require('mongoose');
 
-const elevenRoutes = require('./eleven');
-
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('Successfully connected to MongoDB'))
+  .catch(err => console.error('Connection error', err));
+ 
+ const elevenRoutes = require('./eleven');
+ 
 const app = express();
 app.use(express.json());
 const port = 3001;
