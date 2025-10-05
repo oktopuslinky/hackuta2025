@@ -1,4 +1,4 @@
-import React from 'react';
+// React import removed to avoid unused import lint error
 import { useAuth0 } from '@auth0/auth0-react';
 
 const Profile = () => {
