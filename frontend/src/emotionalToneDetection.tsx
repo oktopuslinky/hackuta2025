@@ -43,29 +43,6 @@ const encodeAudio = (audioBlob: Blob): Promise<string> => {
 };
 
 /**
- * Returns the prompt for a basic emotional tone analysis.
- * @returns A string containing the prompt for the API.
- */
-const getBasicPrompt = () => `
-Analyze the emotional tone of this audio. Please provide:
-1. The transcribed text
-2. The emotional tone (happy, sad, angry, excited, calm, nervous, etc.)
-3. The confidence level of the emotional analysis (0-100%)
-4. Key emotional indicators you detected (tone, pace, volume, etc.)
-5. Any specific emotional nuances or mixed emotions
-
-Format your response as JSON with the following structure:
-{
-    "transcription": "transcribed text here",
-    "emotional_tone": "primary emotion",
-    "confidence": 85,
-    "emotional_indicators": ["list of indicators"],
-    "nuances": "any additional emotional details",
-    "secondary_emotions": ["list of secondary emotions if any"]
-}
-`;
-
-/**
  * Returns the prompt for a detailed emotional tone analysis.
  * @returns A string containing the detailed prompt for the API.
  */
@@ -108,7 +85,7 @@ Please respond with a detailed JSON analysis:
     "overall_mood": "summary of emotional state",
     "secondary_emotions": ["any additional emotions detected"],
     "timestamps": {
-        "time1": "emotion1", [continue as detected]
+        "0:00-0:10": "emotion1"
     },
     "wpm": "words per minute",
     "recommendations": "suggestions based on emotional analysis"
@@ -117,36 +94,22 @@ Please respond with a detailed JSON analysis:
 
 /**
  * Analyzes the emotional tone of an audio file by calling the Gemini API.
- * It performs both a basic and a detailed analysis and triggers a download for each result.
+ * It performs a detailed analysis and returns the resulting JSON object.
  * @param audioBlob The audio file to analyze, as a Blob object.
- * @param audioName The name of the audio file, for logging purposes.
+ * @returns A promise that resolves with the parsed JSON analysis, or null if an error occurs.
  */
-export const analyzeAudioEmotion = async (audioBlob: Blob, audioName: string) => {
+export const analyzeConversationEmotion = async (audioBlob: Blob): Promise<object | null> => {
     if (!API_KEY) {
         console.error("Gemini API key not found. Make sure VITE_GEMINI_API_KEY is set in your .env file.");
-        return;
+        return null;
     }
 
-    console.log(`Analyzing audio file: ${audioName}`);
-
-    const base64Audio = await encodeAudio(audioBlob);
-
-    // Perform both basic and detailed analysis as the original Python script did.
-    await performAnalysis(base64Audio, false);
-    await performAnalysis(base64Audio, true);
-};
-
-/**
- * A helper function to perform the actual API call for either basic or detailed analysis.
- * @param base64Audio The base64 encoded audio data.
- * @param detailed A boolean flag to determine whether to perform a detailed analysis.
- */
-const performAnalysis = async (base64Audio: string, detailed: boolean) => {
-    const prompt = detailed ? getDetailedPrompt() : getBasicPrompt();
-    const analysisType = detailed ? 'detailed' : 'basic';
-    console.log(`${analysisType.toUpperCase()} EMOTIONAL TONE ANALYSIS`);
+    console.log("Performing detailed emotional analysis on the full conversation...");
 
     try {
+        const base64Audio = await encodeAudio(audioBlob);
+        const prompt = getDetailedPrompt();
+
         const response = await fetch(`${API_BASE_URL}/chat/completions`, {
             method: 'POST',
             headers: {
@@ -164,7 +127,7 @@ const performAnalysis = async (base64Audio: string, detailed: boolean) => {
                                 type: "input_audio",
                                 input_audio: {
                                     data: base64Audio,
-                                    format: "wav" // Assuming WAV format, this could be made dynamic if needed.
+                                    format: "wav"
                                 }
                             }
                         ]
@@ -180,27 +143,18 @@ const performAnalysis = async (base64Audio: string, detailed: boolean) => {
 
         const result = await response.json();
         const content = result.choices[0].message.content;
-        console.log(content);
-
+        
         const jsonResult = extractJsonFromString(content);
         if (jsonResult) {
-            console.log(`PARSED ${analysisType.toUpperCase()} ANALYSIS`);
-            console.log(jsonResult);
-            // Create a downloadable file with the analysis results.
-            const blob = new Blob([JSON.stringify(jsonResult, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${analysisType}_analysis.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            console.log("Detailed analysis complete.");
+            return jsonResult;
         } else {
-            console.log(`Could not find JSON in the ${analysisType} analysis response.`);
+            console.error("Could not find JSON in the detailed analysis response.");
+            return null;
         }
 
     } catch (error) {
-        console.error(`Error in ${analysisType} analysis:`, error);
+        console.error("Error in detailed analysis:", error);
+        return null;
     }
 };
