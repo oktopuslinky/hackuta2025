@@ -5,32 +5,32 @@ const User = require('../models/User');
 
 router.post('/', async (req, res) => {
   try {
-    const { firstName, lastName, email, password } = req.body;
+    const { fName, lName, email, password } = req.body;
 
-    if (!firstName || !lastName || !email || !password) {
-      return res.status(400).json({ error: 'All fields are required.' });
+    if (!fName || !lName || !email || !password) {
+      return res.status(400).json({ error: 'missing fields' });
     }
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ error: 'User with this email already exists.' });
+    const findUser = await User.findOne({ email });
+    if (findUser) {
+      return res.status(400).json({ error: 'email alr used.' });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashPassword = await bcrypt.hash(password, 10);
 
     const newUser = new User({
-      firstName,
-      lastName,
+      fName,
+      lName,
       email,
-      password: hashedPassword,
+      password: hashPassword,
     });
 
     await newUser.save();
 
-    res.status(201).json({ message: 'User created successfully.', userId: newUser.uid });
+    res.status(201).json({ message: 'user created.', userId: newUser.uid });
   } catch (error) {
-    console.error('Error creating user:', error);
-    res.status(500).json({ error: 'Failed to create user.' });
+    console.error('user creating errror:', error);
+    res.status(500).json({ error: 'user failed.' });
   }
 });
 
