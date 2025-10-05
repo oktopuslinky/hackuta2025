@@ -40,21 +40,41 @@ const CleanInterviewScreen = () => {
     scrollToBottom();
   }, [messages]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (input.trim()) {
       setShowWelcome(false);
-      setMessages([...messages, { id: Date.now(), text: input, sender: 'user' }]);
+      const userMessage: Message = { id: Date.now(), text: input, sender: 'user' };
+      setMessages(prevMessages => [...prevMessages, userMessage]);
       setInput('');
       setIsLoading(true);
-      
-      setTimeout(() => {
-        setMessages(prevMessages => [...prevMessages, { 
-          id: Date.now(), 
-          text: 'That\'s a great question. Let me help you prepare for that. In interviews, it\'s important to be authentic and confident.', 
-          sender: 'ai' 
-        }]);
+
+      try {
+        const response = await fetch('http://localhost:3001/api/gemini/interview', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ message: input }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to get response from the server.');
+        }
+
+        const data = await response.json();
+        const aiMessage: Message = { id: Date.now(), text: data.response, sender: 'ai' };
+        setMessages(prevMessages => [...prevMessages, aiMessage]);
+      } catch (error) {
+        console.error('Error sending message:', error);
+        const errorMessage: Message = {
+          id: Date.now(),
+          text: 'Sorry, I\'m having trouble connecting. Please try again later.',
+          sender: 'ai',
+        };
+        setMessages(prevMessages => [...prevMessages, errorMessage]);
+      } finally {
         setIsLoading(false);
-      }, 1500);
+      }
     }
   };
 
