@@ -98,7 +98,7 @@ const CleanInterviewScreen = () => {
           </button>
         ) : (
           <button
-            onClick={() => loginWithRedirect()}
+            onClick={() => loginWithRedirect({ authorizationParams: { prompt: 'login' } })}
             className="login-btn"
             style={{
               padding: '10px 24px',
