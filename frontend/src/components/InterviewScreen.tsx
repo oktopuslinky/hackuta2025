@@ -7,19 +7,14 @@ interface Message {
   sender: 'user' | 'ai';
 }
 
-const CleanInterviewScreen = () => {
-  // Auth and State
-  const { loginWithRedirect, logout, isAuthenticated, getAccessTokenSilently } = useAuth0();
+const InterviewScreen = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Audio State
-  const [isRecording, setIsRecording] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -29,101 +24,6 @@ const CleanInterviewScreen = () => {
     scrollToBottom();
   }, [messages]);
 
-  // --- Audio Handling Functions ---
-
-  const handleSendAudio = async (audioBlob: Blob) => {
-      if (!isAuthenticated) {
-          alert("Please log in to use the voice feature.");
-          setIsLoading(false);
-          return;
-      }
-      
-      setShowWelcome(false);
-      setIsLoading(true);
-      setMessages(prev => [...prev, { id: Date.now(), text: "🎤 User response recorded...", sender: 'user' }]);
-
-      const formData = new FormData();
-      formData.append('audio', audioBlob, 'user_response.webm');
-
-      try {
-          const token = await getAccessTokenSilently(); // Get auth token
-          const response = await fetch('http://localhost:3001/api/agent/analyze', {
-              method: 'POST',
-              headers: {
-                  // 'Content-Type' is set automatically by browser for FormData
-                  Authorization: `Bearer ${token}`,
-              },
-              body: formData,
-          });
-
-          if (!response.ok) {
-              const errorText = await response.text();
-              console.error("API Error Response:", errorText);
-              throw new Error(`Network response was not ok: ${response.status}`);
-          }
-
-          const data = await response.json();
-          
-          setMessages(prev => [...prev, {
-              id: Date.now(),
-              text: data.feedback || "I received your response and am ready for the next question!",
-              sender: 'ai'
-          }]);
-
-      } catch (error) {
-          console.error("Error sending audio:", error);
-          setMessages(prev => [...prev, {
-              id: Date.now(),
-              text: "Sorry, I had trouble analyzing that. Please ensure the backend is running and you are logged in.",
-              sender: 'ai'
-          }]);
-      } finally {
-          setIsLoading(false);
-      }
-  };
-
-  const toggleRecording = async () => {
-      if (!isAuthenticated) {
-          loginWithRedirect();
-          return;
-      }
-      
-      if (isRecording) {
-          // Stop recording
-          mediaRecorderRef.current?.stop();
-          setIsRecording(false);
-      } else {
-          // Start recording
-          try {
-              const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-              const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm; codecs=opus' });
-              mediaRecorderRef.current = mediaRecorder;
-              audioChunksRef.current = [];
-
-              mediaRecorder.ondataavailable = (event) => {
-                  if (event.data.size > 0) {
-                      audioChunksRef.current.push(event.data);
-                  }
-              };
-
-              mediaRecorder.onstop = () => {
-                  const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-                  handleSendAudio(audioBlob);
-                  // Stop the stream tracks to release the microphone
-                  stream.getTracks().forEach(track => track.stop()); 
-              };
-
-              mediaRecorder.start();
-              setIsRecording(true);
-          } catch (err) {
-              console.error("Error accessing microphone:", err);
-              alert("Could not access microphone. Please check permissions and ensure you are using HTTPS/localhost.");
-          }
-      }
-  };
-
-  // --- Text Handling (Kept simple for initial prompt) ---
-
   const handleSend = () => {
     if (input.trim()) {
       setShowWelcome(false);
@@ -131,15 +31,30 @@ const CleanInterviewScreen = () => {
       setInput('');
       setIsLoading(true);
       
-      // Mock AI response for text input, prompting user to use audio
       setTimeout(() => {
         setMessages(prevMessages => [...prevMessages, { 
           id: Date.now(), 
-          text: 'I see you want to practice that. Please use the microphone button to record your answer to the question.', 
+          text: 'That\'s a great question. Let me help you prepare for that. In interviews, it\'s important to be authentic and confident.', 
           sender: 'ai' 
         }]);
         setIsLoading(false);
       }, 1500);
+    }
+  };
+
+  const handleMicClick = () => {
+    navigate('/voice-interface');
+  };
+
+  const handleFileButtonClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      console.log('Selected file:', file);
+      // You can now handle the file upload logic here
     }
   };
 
@@ -482,7 +397,7 @@ const CleanInterviewScreen = () => {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                    placeholder="Type a question or use the mic to respond..."
+                    placeholder="What would you like to practice today?"
                     disabled={isLoading}
                     style={{
                       flex: 1,
@@ -549,12 +464,6 @@ const CleanInterviewScreen = () => {
           0%, 100% { transform: scale(1); opacity: 0.08; }
           50% { transform: scale(1.05); opacity: 0.12; }
         }
-        
-        @keyframes pulse-record {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-        }
 
         @keyframes bounce {
           0%, 100% { transform: translateY(0); }
@@ -585,8 +494,7 @@ const CleanInterviewScreen = () => {
         .primary-btn:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(249, 115, 22, 0.5); }
         .secondary-btn:hover { background: rgba(82, 82, 82, 0.5); transform: scale(1.05); }
         .icon-btn:hover { color: #fb923c; transform: scale(1.1); }
-        .mic-btn:hover:not([disabled]) { transform: scale(1.1); box-shadow: 0 6px 20px rgba(249, 115, 22, 0.5); }
-        .mic-btn[disabled] { opacity: 0.6; cursor: not-allowed; }
+        .mic-btn:hover { transform: scale(1.1); box-shadow: 0 6px 20px rgba(249, 115, 22, 0.5); }
         .suggestion-btn:hover { background: rgba(82, 82, 82, 0.5); border-color: rgba(251, 146, 60, 0.4); color: white; transform: scale(1.05); }
         .feature-card:hover { border-color: rgba(251, 146, 60, 0.4); transform: scale(1.05); box-shadow: 0 20px 40px rgba(249, 115, 22, 0.15); }
         
