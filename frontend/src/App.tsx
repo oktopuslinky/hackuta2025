@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
 
 import Profile from './components/Profile';
@@ -9,20 +9,16 @@ import InterviewScreen from './components/InterviewScreen';
 import Sidebar from './components/Sidebar';
 import VoiceInterface from './components/VoiceInterface';
 import EmotionVisualizer from './components/EmotionVisualizer';
-
+import Landing from './components/landing/landing';
 import './App.css';
 
-
-function App() {
+const MainApp = () => {
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
-   const { isAuthenticated, isLoading, user } = useAuth0();
+  const { isAuthenticated, user } = useAuth0();
 
   useEffect(() => {
-    console.log(user)
-    console.log(isLoading)
     if (isAuthenticated && user) {
       const addUser = async () => {
-        console.log(user)
         try {
           const response = await fetch('http://localhost:3001/api/user', {
             method: 'POST',
@@ -40,8 +36,7 @@ function App() {
             throw new Error('Failed to add user');
           }
 
-          const data = await response.json();
-          console.log(data);
+          await response.json();
         } catch (error) {
           console.error(error);
         }
@@ -49,7 +44,7 @@ function App() {
 
       addUser();
     }
-  }, [isAuthenticated, isLoading, user]);
+  }, [isAuthenticated, user]);
 
   const toggleSidebar = () => {
     setSidebarCollapsed(!isSidebarCollapsed);
@@ -69,6 +64,28 @@ function App() {
         </Routes>
       </main>
     </div>
+  );
+};
+
+function App() {
+  const { isAuthenticated, isLoading } = useAuth0();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (isAuthenticated) {
+        navigate('/app');
+      } else {
+        navigate('/landing');
+      }
+    }
+  }, [isAuthenticated, isLoading, navigate]);
+
+  return (
+    <Routes>
+      <Route path="/landing" element={<Landing />} />
+      <Route path="/*" element={<MainApp />} />
+    </Routes>
   );
 }
 
