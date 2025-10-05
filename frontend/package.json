@@ -11,10 +11,13 @@
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.5.0",
+    "@types/react-plotly.js": "^2.6.3",
     "kill-port": "^2.0.1",
+    "plotly.js": "^3.1.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-dropzone": "^14.3.8",
+    "react-plotly.js": "^2.6.0",
     "react-router-dom": "^7.9.3"
   },
   "devDependencies": {

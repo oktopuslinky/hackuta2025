@@ -9,6 +9,7 @@ import ApiTest from './components/ApiTest';
 import InterviewScreen from './components/InterviewScreen';
 import Sidebar from './components/Sidebar';
 import VoiceInterface from './components/VoiceInterface';
+import EmotionVisualizer from './components/EmotionVisualizer';
 
 import './App.css';
 
@@ -65,6 +66,7 @@ function App() {
           <Route path="/profile" element={<ProtectedRoute component={Profile} />} />
           <Route path="/api-test" element={<ProtectedRoute component={ApiTest} />} />
           <Route path="/voice-interface" element={<VoiceInterface />} />
+          <Route path="/visualizer" element={<EmotionVisualizer />} />
         </Routes>
       </main>
     </div>
