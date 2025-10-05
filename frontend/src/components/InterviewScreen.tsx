@@ -1,5 +1,7 @@
 import { useAuth0 } from '@auth0/auth0-react';
 import { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import FileUploadPopup from './FileUploadPopup';
 
 interface Message {
   id: number;
@@ -13,8 +15,10 @@ const CleanInterviewScreen = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
+  const [isAgentMode, setIsAgentMode] = useState(false);
+  const [showFileUpload, setShowFileUpload] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -34,7 +38,9 @@ const CleanInterviewScreen = () => {
       setTimeout(() => {
         setMessages(prevMessages => [...prevMessages, { 
           id: Date.now(), 
-          text: 'That\'s a great question. Let me help you prepare for that. In interviews, it\'s important to be authentic and confident.', 
+          text: isAgentMode
+            ? 'Enhanced AI Response: Analyzing your question... Here is a detailed breakdown...'
+            : 'That\'s a great question. Let me help you prepare for that. In interviews, it\'s important to be authentic and confident.', 
           sender: 'ai' 
         }]);
         setIsLoading(false);
@@ -42,15 +48,10 @@ const CleanInterviewScreen = () => {
     }
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files.length > 0) {
-      const file = event.target.files[0];
-      setInput(`File selected: ${file.name}`);
-    }
-  };
-
-  const handleFileButtonClick = () => {
-    fileInputRef.current?.click();
+  const handleFilesUpload = (files: File[]) => {
+    setUploadedFiles(prev => [...prev, ...files]);
+    // Handle the file upload logic here, e.g., send to a server.
+    console.log('Uploaded files:', files);
   };
 
   return (
@@ -173,6 +174,31 @@ const CleanInterviewScreen = () => {
 
           {/* Input Area */}
           <div className="fade-in-delay-2" style={{ width: '100%', maxWidth: '768px', marginBottom: '32px' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px', alignItems: 'center', gap: '12px' }}>
+              <span style={{ color: '#a1a1aa', fontSize: '14px' }}>Standard</span>
+              <button onClick={() => setIsAgentMode(!isAgentMode)} style={{
+                position: 'relative',
+                width: '48px',
+                height: '28px',
+                borderRadius: '9999px',
+                background: isAgentMode ? 'linear-gradient(to right, #f97316, #ea580c)' : 'rgba(64, 64, 64, 0.5)',
+                border: '1px solid rgba(82, 82, 82, 0.3)',
+                cursor: 'pointer',
+                transition: 'background 0.3s'
+              }}>
+                <div style={{
+                  position: 'absolute',
+                  top: '2px',
+                  left: isAgentMode ? '22px' : '2px',
+                  width: '22px',
+                  height: '22px',
+                  borderRadius: '50%',
+                  background: 'white',
+                  transition: 'left 0.3s'
+                }}></div>
+              </button>
+              <span style={{ color: isAgentMode ? '#fb923c' : '#a1a1aa', fontSize: '14px', fontWeight: isAgentMode ? 'bold' : 'normal' }}>Enhanced AI</span>
+            </div>
             <div style={{ position: 'relative' }} className="input-glow-wrapper">
               <div className="glow-border"></div>
               <div style={{
@@ -186,17 +212,27 @@ const CleanInterviewScreen = () => {
                 border: '1px solid rgba(82, 82, 82, 0.3)',
                 padding: '16px 24px'
               }}>
-                <button onClick={handleFileButtonClick} style={{ color: '#a1a1aa', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }} className="icon-btn">
+                <button onClick={() => setShowFileUpload(true)} style={{ color: '#a1a1aa', background: 'none', border: 'none', cursor: 'pointer', padding: 0, position: 'relative' }} className="icon-btn">
                   <svg style={{ width: '20px', height: '20px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                   </svg>
+                  {uploadedFiles.length > 0 && (
+                    <span style={{
+                      position: 'absolute',
+                      top: '-5px',
+                      right: '-8px',
+                      background: '#f97316',
+                      color: 'white',
+                      borderRadius: '50%',
+                      width: '18px',
+                      height: '18px',
+                      fontSize: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>{uploadedFiles.length}</span>
+                  )}
                 </button>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                  style={{ display: 'none' }}
-                />
                 <input
                   type="text"
                   value={input}
@@ -223,7 +259,7 @@ const CleanInterviewScreen = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                   </svg>
                 </button>
-                <button className="mic-btn" style={{
+                <Link to="/voice" className="mic-btn" style={{
                   width: '40px',
                   height: '40px',
                   borderRadius: '50%',
@@ -239,7 +275,7 @@ const CleanInterviewScreen = () => {
                     <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
                     <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
                   </svg>
-                </button>
+                </Link>
               </div>
             </div>
           </div>
@@ -387,6 +423,31 @@ const CleanInterviewScreen = () => {
           {/* Input Area - Chat mode */}
           <div style={{ width: '100%', borderTop: '1px solid rgba(82, 82, 82, 0.2)', background: 'rgba(15, 15, 15, 0.8)', backdropFilter: 'blur(20px)', zIndex: 10 }}>
             <div style={{ maxWidth: '768px', margin: '0 auto', padding: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px', alignItems: 'center', gap: '12px' }}>
+                <span style={{ color: '#a1a1aa', fontSize: '14px' }}>Standard</span>
+                <button onClick={() => setIsAgentMode(!isAgentMode)} style={{
+                  position: 'relative',
+                  width: '48px',
+                  height: '28px',
+                  borderRadius: '9999px',
+                  background: isAgentMode ? 'linear-gradient(to right, #f97316, #ea580c)' : 'rgba(64, 64, 64, 0.5)',
+                  border: '1px solid rgba(82, 82, 82, 0.3)',
+                  cursor: 'pointer',
+                  transition: 'background 0.3s'
+                }}>
+                  <div style={{
+                    position: 'absolute',
+                    top: '2px',
+                    left: isAgentMode ? '22px' : '2px',
+                    width: '22px',
+                    height: '22px',
+                    borderRadius: '50%',
+                    background: 'white',
+                    transition: 'left 0.3s'
+                  }}></div>
+                </button>
+                <span style={{ color: isAgentMode ? '#fb923c' : '#a1a1aa', fontSize: '14px', fontWeight: isAgentMode ? 'bold' : 'normal' }}>Enhanced AI</span>
+              </div>
               <div style={{ position: 'relative' }} className="input-glow-wrapper">
                 <div className="glow-border"></div>
                 <div style={{
@@ -400,17 +461,27 @@ const CleanInterviewScreen = () => {
                   border: '1px solid rgba(82, 82, 82, 0.3)',
                   padding: '16px 24px'
                 }}>
-                  <button onClick={handleFileButtonClick} style={{ color: '#a1a1aa', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }} className="icon-btn">
+                  <button onClick={() => setShowFileUpload(true)} style={{ color: '#a1a1aa', background: 'none', border: 'none', cursor: 'pointer', padding: 0, position: 'relative' }} className="icon-btn">
                     <svg style={{ width: '20px', height: '20px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                     </svg>
+                    {uploadedFiles.length > 0 && (
+                      <span style={{
+                        position: 'absolute',
+                        top: '-5px',
+                        right: '-8px',
+                        background: '#f97316',
+                        color: 'white',
+                        borderRadius: '50%',
+                        width: '18px',
+                        height: '18px',
+                        fontSize: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>{uploadedFiles.length}</span>
+                    )}
                   </button>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    style={{ display: 'none' }}
-                  />
                   <input
                     type="text"
                     value={input}
@@ -437,7 +508,7 @@ const CleanInterviewScreen = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                     </svg>
                   </button>
-                  <button className="mic-btn" style={{
+                  <Link to="/voice" className="mic-btn" style={{
                     width: '40px',
                     height: '40px',
                     borderRadius: '50%',
@@ -453,12 +524,19 @@ const CleanInterviewScreen = () => {
                       <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
                       <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
                     </svg>
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>
           </div>
         </>
+      )}
+ 
+      {showFileUpload && (
+        <FileUploadPopup
+          onClose={() => setShowFileUpload(false)}
+          onFilesUpload={handleFilesUpload}
+        />
       )}
 
       <style>{`

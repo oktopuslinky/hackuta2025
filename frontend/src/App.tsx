@@ -3,6 +3,7 @@ import Profile from './components/Profile';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import ApiTest from './components/ApiTest';
 import InterviewScreen from './components/InterviewScreen';
+import VoiceMode from './components/VoiceMode';
 import './App.css';
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
         <Route path="/" element={<InterviewScreen />} />
         <Route path="/profile" element={<ProtectedRoute component={Profile} />} />
         <Route path="/api-test" element={<ProtectedRoute component={ApiTest} />} />
+        <Route path="/voice" element={<VoiceMode />} />
       </Routes>
     </>
   );
