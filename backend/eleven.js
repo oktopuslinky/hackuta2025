@@ -64,7 +64,7 @@ router.post('/tts', async (req, res) => {
 
     const chunksOfAudio = [];
     for await (const chunk of audioS) {
-      chunks.push(chunk);
+      chunksOfAudio.push(chunk);
     }
     const result = Buffer.concat(chunksOfAudio);
     res.send(result);
