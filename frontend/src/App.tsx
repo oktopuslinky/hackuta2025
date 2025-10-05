@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
 
 import Profile from './components/Profile';
@@ -68,19 +68,6 @@ const MainApp = () => {
 };
 
 function App() {
-  const { isAuthenticated, isLoading } = useAuth0();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!isLoading) {
-      if (isAuthenticated) {
-        navigate('/app');
-      } else {
-        navigate('/landing');
-      }
-    }
-  }, [isAuthenticated, isLoading, navigate]);
-
   return (
     <Routes>
       <Route path="/landing" element={<Landing />} />
