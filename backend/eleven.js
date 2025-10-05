@@ -56,8 +56,8 @@ router.post('/tts', async (req, res) => {
   console.log('TTS request received. text length=', (text || '').length, 'voiceId=', voiceId, 'voiceGender=', voiceGender);
   // Map voiceGender to environment voice ids if provided
   const defaultVoiceId = 'JBFqnCBsd6RMkjVDRZzb';
-  const maleVoiceId = process.env.ELEVEN_VOICE_MALE || defaultVoiceId;
-  const femaleVoiceId = process.env.ELEVEN_VOICE_FEMALE || defaultVoiceId;
+  const maleVoiceId = 'JBFqnCBsd6RMkjVDRZzb';
+  const femaleVoiceId = '21m00Tcm4TlvDq8ikWAM';
   let chosenVoiceId = voiceId || (voiceGender === 'male' ? maleVoiceId : femaleVoiceId);
     let attempt = 0;
     let audioS = null;
