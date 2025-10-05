@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
 
@@ -15,7 +15,7 @@ import Landing from './components/landing/landing';
 
 import './App.css';
 
-function App() {
+function MainApp() {
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { isAuthenticated, isLoading, user } = useAuth0();
 
@@ -57,32 +57,28 @@ function App() {
     setSidebarCollapsed(!isSidebarCollapsed);
   };
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
+  return (
+    <div className={`app-layout ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+      <Sidebar isCollapsed={isSidebarCollapsed} toggleSidebar={toggleSidebar} />
+      <main className="main-content">
+        <Routes>
+          <Route path="/" element={<InterviewScreen />} />
+          <Route path="/interview" element={<InterviewScreen />} />
+          <Route path="/profile" element={<ProtectedRoute component={Profile} />} />
+          <Route path="/api-test" element={<ProtectedRoute component={ApiTest} />} />
+          <Route path="/voice-interface" element={<VoiceInterface />} />
+          <Route path="/visualizer" element={<EmotionVisualizer />} />
+        </Routes>
+      </main>
+    </div>
+  );
+};
 
+function App() {
   return (
     <Routes>
       <Route path="/landing" element={<Landing />} />
-      <Route
-        path="/*"
-        element={
-          <div className={`app-layout ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-            <Sidebar isCollapsed={isSidebarCollapsed} toggleSidebar={toggleSidebar} />
-            <main className="main-content">
-              <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/interview" element={<InterviewScreen />} />
-                <Route path="/communication" element={<CommunicationScreen />} />
-                <Route path="/profile" element={<ProtectedRoute component={Profile} />} />
-                <Route path="/api-test" element={<ProtectedRoute component={ApiTest} />} />
-                <Route path="/voice-interface/:mode" element={<VoiceInterface />} />
-                <Route path="/visualizer" element={<EmotionVisualizer />} />
-              </Routes>
-            </main>
-          </div>
-        }
-      />
+      <Route path="/*" element={<MainApp />} />
     </Routes>
   );
 }
