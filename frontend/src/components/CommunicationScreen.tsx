@@ -74,7 +74,7 @@ const CommunicationScreen = () => {
         let sessionId = localStorage.getItem(key);
         if (!sessionId) {
           sessionId = generateSessionId();
-          localStorage.setItem(key, sessionId);
+          localStorage.setItem(key, sessionId ?? '');
         }
         const response = await fetch('http://localhost:3001/api/gemini/conversation', {
           method: 'POST',

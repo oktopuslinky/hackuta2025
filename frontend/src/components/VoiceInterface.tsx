@@ -31,6 +31,8 @@ const VoiceInterface: React.FC = () => {
   const [transcript, setTranscript] = useState('');
   const [status, setStatus] = useState('Ready to listen');
   const [showAnalysisPrompt, setShowAnalysisPrompt] = useState(false);
+  const [pendingAudioUrl, setPendingAudioUrl] = useState<string | null>(null);
+  const [playbackError, setPlaybackError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -256,14 +258,48 @@ const VoiceInterface: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: aiResponse }),
       });
+      // Validate response
+      if (!ttsResponse.ok) {
+        console.error('TTS endpoint returned error', ttsResponse.status, await ttsResponse.text());
+        setStatus('TTS failed');
+        return;
+      }
 
       const ttsAudioBlob = await ttsResponse.blob();
+      // Basic validation: blob should be non-empty and audio mime
+      if (!ttsAudioBlob || ttsAudioBlob.size === 0) {
+        console.error('TTS returned empty audio blob');
+        setStatus('TTS returned empty audio');
+        return;
+      }
+
+      const isAudio = ttsAudioBlob.type && ttsAudioBlob.type.startsWith('audio');
       const audioUrl = URL.createObjectURL(ttsAudioBlob);
+      if (!isAudio) {
+        console.warn('TTS returned non-audio blob, type=', ttsAudioBlob.type);
+        // Still try to play, but show user a fallback if it fails
+      }
+
+      // Create audio element and attempt playback. If autoplay is blocked, provide a Play button.
       const audio = new Audio(audioUrl);
+      audio.volume = 1.0;
+      let played = false;
       try {
         await audio.play();
+        played = true;
       } catch (e) {
-        console.warn('Autoplay blocked, awaiting user interaction to play audio.');
+        console.warn('Autoplay blocked or playback failed, awaiting user interaction to play audio.', e);
+        setPlaybackError(String(e));
+      }
+
+      if (!played) {
+        // Keep URL around so the user can manually play it
+        setPendingAudioUrl(audioUrl);
+      } else {
+        // When playback completes, revoke the URL
+        audio.onended = () => {
+          URL.revokeObjectURL(audioUrl);
+        };
       }
       audio.onended = () => {
         if (isConversationActiveRef.current) {
@@ -276,6 +312,23 @@ const VoiceInterface: React.FC = () => {
       console.error('Error during conversation cycle:', error);
       setStatus('Error. Please try again.');
       stopConversation();
+    }
+  };
+
+  const handleManualPlay = async () => {
+    if (!pendingAudioUrl) return;
+    try {
+      const audio = new Audio(pendingAudioUrl);
+      audio.volume = 1.0;
+      await audio.play();
+      audio.onended = () => {
+        URL.revokeObjectURL(pendingAudioUrl);
+        setPendingAudioUrl(null);
+        setPlaybackError(null);
+      };
+    } catch (e) {
+      console.error('Manual playback failed', e);
+      setPlaybackError(String(e));
     }
   };
 
@@ -311,6 +364,15 @@ const VoiceInterface: React.FC = () => {
       stopConversation();
     };
   }, []);
+
+  // Revoke pending audio URL on change/unmount to avoid leaking blob URLs
+  useEffect(() => {
+    return () => {
+      if (pendingAudioUrl) {
+        try { URL.revokeObjectURL(pendingAudioUrl); } catch (e) { /* noop */ }
+      }
+    };
+  }, [pendingAudioUrl]);
 
   return (
     <div className="voice-interface-page">
@@ -350,6 +412,13 @@ const VoiceInterface: React.FC = () => {
                 <p id="statusText" className={`status-text ${isConversationActive ? 'active' : ''}`}>
                 {status}
                 </p>
+
+                {pendingAudioUrl && (
+                  <div style={{ marginTop: '12px', display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <button className="prompt-btn" onClick={handleManualPlay}>Play AI response</button>
+                    {playbackError && <div style={{ color: '#f87171' }}>Playback error: {playbackError}</div>}
+                  </div>
+                )}
 
                 {showAnalysisPrompt && (
                   <div className="analysis-prompt">
