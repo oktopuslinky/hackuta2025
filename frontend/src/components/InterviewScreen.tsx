@@ -100,6 +100,48 @@ const InterviewScreen = () => {
         }}></div>
       </div>
 
+
+      {/* Header with Login */}
+      <div style={{ position: 'absolute', top: 0, right: 0, padding: '24px', zIndex: 50 }}>
+        {isAuthenticated ? (
+          <button
+            onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
+            className="login-btn"
+            style={{
+              padding: '10px 24px',
+              borderRadius: '9999px',
+              background: 'linear-gradient(to right, #f97316, #ea580c)',
+              color: 'white',
+              fontWeight: 500,
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'all 0.3s',
+              boxShadow: '0 4px 15px rgba(249, 115, 22, 0.25)',
+            }}
+          >
+            Log Out
+          </button>
+        ) : (
+          <button
+            onClick={() => loginWithRedirect({ authorizationParams: { prompt: 'login' } })}
+            className="login-btn"
+            style={{
+              padding: '10px 24px',
+              borderRadius: '9999px',
+              background: 'linear-gradient(to right, #f97316, #ea580c)',
+              color: 'white',
+              fontWeight: 500,
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'all 0.3s',
+              boxShadow: '0 4px 15px rgba(249, 115, 22, 0.25)',
+            }}
+          >
+            Log In
+          </button>
+        )}
+      </div>
+
       {showWelcome && messages.length === 0 ? (
         /* Welcome State */
           <div style={{

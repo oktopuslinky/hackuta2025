@@ -3,6 +3,7 @@ import os
 import json
 from openai import OpenAI
 from dotenv import load_dotenv
+import time
 
 def extract_json_from_string(s):
     try:
@@ -127,6 +128,10 @@ def analyze_emotional_tone_detailed(audio_file_path, api_key):
             "emotional_transitions": ["any changes in emotion"],
             "overall_mood": "summary of emotional state",
             "secondary_emotions": ["any additional emotions detected"],
+            "timestamps": {
+                "time1": "emotion1", [continue as detected]
+            },
+            "wpm": "words per minute",
             "recommendations": "suggestions based on emotional analysis"
         }
         """
@@ -160,7 +165,7 @@ def analyze_emotional_tone_detailed(audio_file_path, api_key):
 
 def main():
     load_dotenv()
-    audio_files = ["Recording5.m4a", "recording5.wav"]
+    audio_files = ['conversation_2025-10-04_21-56-11.wav']
     audio_file = None
     
     # ensure audio files exist
@@ -174,6 +179,7 @@ def main():
         return
     
     # get api key
+    load_dotenv()
     api_key = os.getenv("GEMINI_API_KEY")
     
     if not api_key:
@@ -205,6 +211,8 @@ def main():
         json_str1 = extract_json_from_string(result1)
         if json_str1:
             data1 = json.loads(json_str1)
+            with open("basic_analysis.json", "w", encoding="utf-8") as f:
+                json.dump(data1, f, indent=4, ensure_ascii=False)
             print("3. PARSED BASIC ANALYSIS")
             print("-" * 40)
             for key, value in data1.items():
@@ -219,6 +227,8 @@ def main():
         json_str2 = extract_json_from_string(result2)
         if json_str2:
             data2 = json.loads(json_str2)
+            with open("detailed_analysis.json", "w", encoding="utf-8") as f:
+                json.dump(data2, f, indent=4, ensure_ascii=False)
             print("4. PARSED DETAILED ANALYSIS")
             print("-" * 40)
             for key, value in data2.items():

@@ -1,15 +1,55 @@
-import { useState } from 'react';
+
+import { useEffect, useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { useAuth0 } from '@auth0/auth0-react';
+
 import Profile from './components/Profile';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import ApiTest from './components/ApiTest';
 import InterviewScreen from './components/InterviewScreen';
 import Sidebar from './components/Sidebar';
 import VoiceInterface from './components/VoiceInterface';
+
 import './App.css';
+
 
 function App() {
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
+   const { isAuthenticated, isLoading, user } = useAuth0();
+
+  useEffect(() => {
+    console.log(user)
+    console.log(isLoading)
+    if (isAuthenticated && user) {
+      const addUser = async () => {
+        console.log(user)
+        try {
+          const response = await fetch('http://localhost:3001/api/user', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              name: user.name,
+              email: user.email,
+              auth0Id: user.sub,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to add user');
+          }
+
+          const data = await response.json();
+          console.log(data);
+        } catch (error) {
+          console.error(error);
+        }
+      };
+
+      addUser();
+    }
+  }, [isAuthenticated, isLoading, user]);
 
   const toggleSidebar = () => {
     setSidebarCollapsed(!isSidebarCollapsed);

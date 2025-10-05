@@ -1,0 +1,16 @@
+{
+    "transcription": "Hey, how are you doing today? I am doing amazing. Tell me something interesting. Tell me more interesting things. Interesting. That is very interesting. That is so cool. Can you tell me more? Actually, don't tell me more. Tell me something else. Tell me another interesting fact.",
+    "emotional_tone": "Interested",
+    "confidence": 90,
+    "emotional_indicators": [
+        "Enthusiastic tone",
+        "Rapid pace",
+        "Varied intonation expressing excitement and curiosity",
+        "Emphasis on words like 'amazing,' 'interesting,' and 'cool'"
+    ],
+    "nuances": "There's a strong sense of curiosity mixed with excitement, creating an overall positive and engaging tone. The speaker seems eager to learn new things and is genuinely enjoying the conversation.",
+    "secondary_emotions": [
+        "Excitement",
+        "Curiosity"
+    ]
+}
