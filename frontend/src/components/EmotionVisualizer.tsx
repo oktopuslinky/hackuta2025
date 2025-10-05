@@ -36,6 +36,12 @@ interface Segment {
   emotion: string;
 }
 
+// Define a type for the analysis result to avoid using 'any'
+interface AnalysisResult {
+  timestamps: { [key: string]: string };
+  secondary_emotions: string[];
+}
+
 export default function EmotionVisualizer() {
   const [plotData, setPlotData] = useState<Data[] | null>(null);
   const [plotLayout, setPlotLayout] = useState<Partial<Layout>>({});
@@ -64,7 +70,7 @@ export default function EmotionVisualizer() {
 
     try {
       // 1. Analyze Emotion
-      const analysisData = await analyzeConversationEmotion(selectedFile);
+      const analysisData = await analyzeConversationEmotion(selectedFile) as AnalysisResult;
       if (!analysisData) {
         throw new Error("Failed to analyze audio. The analysis returned no data.");
       }
@@ -103,7 +109,7 @@ export default function EmotionVisualizer() {
       const plotEnvelope = maxEnv > 0 ? Array.from(envelope).map(v => v / maxEnv) : Array.from(envelope);
 
       // 4. Parse Timestamps and Emotions
-      const timestamps = (analysisData as any).timestamps || {};
+      const timestamps = analysisData.timestamps || {};
       const primarySegments: Segment[] = Object.entries(timestamps).map(([range, emotion]) => {
         const [startStr, endStr] = range.split("-");
         const start = timestrToSeconds(startStr);
@@ -118,7 +124,7 @@ export default function EmotionVisualizer() {
       const maxSegmentEnd = primarySegments.reduce((max, seg) => Math.max(max, seg.end), 0);
       const totalDuration = Math.max(maxSegmentEnd, timePoints.length > 0 ? timePoints[timePoints.length - 1] : 0);
       
-      const secondaryEmotions = (analysisData as any).secondary_emotions || [];
+      const secondaryEmotions = analysisData.secondary_emotions || [];
       const secondarySegments: Segment[] = [];
       if (secondaryEmotions.length > 0) {
         const secLen = totalDuration / secondaryEmotions.length;
@@ -168,7 +174,8 @@ export default function EmotionVisualizer() {
 
       // 7. Define Plotly Layout
       setPlotLayout({
-        template: 'plotly_white' as any,
+        // @ts-expect-error - The 'template' property accepts a string, but the type definition is too strict.
+        template: 'plotly_white',
         height: 800,
         margin: { l: 120, r: 30, t: 100, b: 80 },
         title: { text: "Audio Emotion Analysis — Waveform + Timelines", x: 0.5 },

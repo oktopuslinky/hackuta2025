@@ -1,5 +1,5 @@
-import { withAuthenticationRequired } from '@auth0/auth0-react';
 import type { ComponentType } from 'react';
+import { withAuthenticationRequired } from '@auth0/auth0-react';
 
 interface ProtectedRouteProps {
   component: ComponentType;

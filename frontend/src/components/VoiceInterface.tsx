@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import toWav from 'audiobuffer-to-wav';
 import { useNavigate, useParams } from 'react-router-dom';
 import './VoiceInterface.css';
-// Removed unused import to fix lint error
 
 const VoiceInterface: React.FC = () => {
   const { mode } = useParams();
