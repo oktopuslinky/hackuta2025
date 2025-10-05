@@ -70,7 +70,7 @@ const CommunicationScreen = () => {
       setIsLoading(true);
 
       try {
-        const key = 'talkitout:session:conversation';
+        const key = 'TalkItOut:session:conversation';
         let sessionId = localStorage.getItem(key);
         if (!sessionId) {
           sessionId = generateSessionId();

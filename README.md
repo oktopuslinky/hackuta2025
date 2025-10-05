@@ -1,10 +1,10 @@
-# Talkitout - AI-Powered Communication Buddy
+# TalkItOut - AI-Powered Communication Buddy
 
 This project was created for HackUTA 2025.
 
 ## Description
 
-Talkitout is an AI-powered interview coaching application designed to help users practice their interviewing skills in a safe and encouraging environment. The application features a chat interface where users can interact with an AI coach, receive feedback, and improve their confidence.
+TalkItOut is an AI-powered interview coaching application designed to help users practice their interviewing skills in a safe and encouraging environment. The application features a chat interface where users can interact with an AI coach, receive feedback, and improve their confidence.
 
 The frontend is built with React and TypeScript, focusing on a clean, modern, and empathetic user interface.
 

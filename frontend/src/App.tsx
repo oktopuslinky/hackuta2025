@@ -66,8 +66,11 @@ function MainApp() {
           <Route path="/interview" element={<InterviewScreen />} />
           <Route path="/profile" element={<ProtectedRoute component={Profile} />} />
           <Route path="/api-test" element={<ProtectedRoute component={ApiTest} />} />
-          <Route path="/voice-interface" element={<VoiceInterface />} />
+          <Route path="/voice-interface/:mode" element={<VoiceInterface />} />
           <Route path="/visualizer" element={<EmotionVisualizer />} />
+          <Route path="/communication" element={<CommunicationScreen />} />
+          <Route path="/homepage" element={<HomePage />} />
+
         </Routes>
       </main>
     </div>

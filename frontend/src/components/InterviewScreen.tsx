@@ -7,7 +7,7 @@ interface Message {
   sender: 'user' | 'ai';
 }
 
-const CleanInterviewScreen = () => {
+const InterviewScreen = () => {
   const generateSessionId = () => {
     if (typeof window !== 'undefined' && (window as any).crypto) {
       const cryptoObj = (window as any).crypto;
@@ -70,7 +70,7 @@ const CleanInterviewScreen = () => {
       setIsLoading(true);
 
       try {
-        const key = 'talkitout:session:interview';
+        const key = 'TalkItOut:session:interview';
         let sessionId = localStorage.getItem(key);
         if (!sessionId) {
           sessionId = generateSessionId();
@@ -538,4 +538,4 @@ const CleanInterviewScreen = () => {
   );
 };
 
-export default CleanInterviewScreen;
+export default InterviewScreen;

@@ -34,14 +34,14 @@ const VoiceInterface: React.FC = () => {
   const [playbackError, setPlaybackError] = useState<string | null>(null);
   const [voiceGender, setVoiceGender] = useState<'female' | 'male'>(() => {
     try {
-      const saved = localStorage.getItem('talkitout:voiceGender');
+      const saved = localStorage.getItem('TalkItOut:voiceGender');
       if (saved === 'male' || saved === 'female') return saved;
     } catch (e) {}
     return 'female';
   });
   const navigate = useNavigate();
   const [useSlang, setUseSlang] = useState<boolean>(() => {
-    try { return localStorage.getItem('talkitout:useSlang') === 'true'; } catch (e) { return false; }
+    try { return localStorage.getItem('TalkItOut:useSlang') === 'true'; } catch (e) { return false; }
   });
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -243,7 +243,7 @@ const VoiceInterface: React.FC = () => {
         ? 'http://localhost:3001/api/gemini/interview'
         : 'http://localhost:3001/api/gemini/conversation';
 
-      const key = `talkitout:session:${mode === 'interview' ? 'interview' : 'conversation'}`;
+      const key = `TalkItOut:session:${mode === 'interview' ? 'interview' : 'conversation'}`;
       const existingSessionId = localStorage.getItem(key);
       let sessionId: string;
       if (existingSessionId) {
@@ -423,7 +423,7 @@ const VoiceInterface: React.FC = () => {
                     aria-pressed={voiceGender === 'female'}
                     onClick={() => {
                       setVoiceGender('female');
-                      try { localStorage.setItem('talkitout:voiceGender', 'female'); } catch (e) {}
+                      try { localStorage.setItem('TalkItOut:voiceGender', 'female'); } catch (e) {}
                     }}
                     style={{
                       padding: '8px 12px',
@@ -440,7 +440,7 @@ const VoiceInterface: React.FC = () => {
                     aria-pressed={voiceGender === 'male'}
                     onClick={() => {
                       setVoiceGender('male');
-                      try { localStorage.setItem('talkitout:voiceGender', 'male'); } catch (e) {}
+                      try { localStorage.setItem('TalkItOut:voiceGender', 'male'); } catch (e) {}
                     }}
                     style={{
                       padding: '8px 12px',
@@ -456,7 +456,7 @@ const VoiceInterface: React.FC = () => {
 
                   <div style={{ marginLeft: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <label style={{ color: '#a1a1aa' }}>Slang</label>
-                    <div onClick={() => { setUseSlang(!useSlang); try { localStorage.setItem('talkitout:useSlang', (!useSlang).toString()); } catch (e) {} }}
+                    <div onClick={() => { setUseSlang(!useSlang); try { localStorage.setItem('TalkItOut:useSlang', (!useSlang).toString()); } catch (e) {} }}
                       style={{ width: '44px', height: '24px', borderRadius: '999px', background: useSlang ? 'linear-gradient(135deg,#f97316,#ea580c)' : '#2d2d2d', display: 'flex', alignItems: 'center', padding: '3px', cursor: 'pointer' }}>
                       <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: 'white', transform: useSlang ? 'translateX(20px)' : 'translateX(0px)', transition: 'transform 0.15s' }} />
                     </div>

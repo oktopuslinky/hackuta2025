@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
-import { MessageCircle, Sparkles, Zap, Shield, Users, Search, Link2 } from 'lucide-react';
+import { MessageCircle, Sparkles, Zap, Shield, Users, Search, Link2, Sun, Moon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { ComponentType } from 'react';
 import './landing.css';
@@ -25,7 +25,7 @@ const LogoIcon = ({ className }: { className?: string }) => (
 );
 
 // Navigation Component
-const Navigation = () => {
+const Navigation = ({ theme, toggleTheme }: { theme: string, toggleTheme: () => void }) => {
   const [scrolled, setScrolled] = useState(false);
   const { loginWithRedirect } = useAuth0();
 
@@ -41,7 +41,7 @@ const Navigation = () => {
         <div className="nav-content">
           <div className="logo-container">
             <LogoIcon className="logo-icon" />
-            <span className="logo-text">Talkitout</span>
+            <span className="logo-text">TalkItOut</span>
           </div>
           
           <div className="nav-links-container">
@@ -50,6 +50,10 @@ const Navigation = () => {
                 Sign In
               </button>
             </div>
+            <button onClick={toggleTheme} className="theme-toggle-button">
+              <Sun className={`theme-icon sun-icon ${theme === 'dark' ? 'hidden' : ''}`} />
+              <Moon className={`theme-icon moon-icon ${theme === 'light' ? 'hidden' : ''}`} />
+            </button>
             <Link to="/app" style={{ textDecoration: 'none' }}>
               <button className="open-chat-button">
                 <MessageCircle className="open-chat-icon" />
@@ -89,11 +93,11 @@ const Hero = () => {
           Now with AI-powered conversations
         </div>
         <h1 className="hero-title">
-          Talkitout
+          TalkItOut
         </h1>
         <p className="hero-subtitle">
-          Connect, communicate, and collaborate with ease. <br />
-          <span className="hero-subtitle-highlight">Your conversations, simplified.</span>
+          <span className="hero-subtitle-highlight">Everyone deserves to be heard. </span>
+          Let's talk about it.
         </p>
         <div className="hero-buttons">
           <Link to="/app">
@@ -266,7 +270,7 @@ const Footer = () => {
           <div className="footer-about">
             <div className="footer-logo-container">
               <LogoIcon className="footer-logo-icon" />
-              <span className="footer-logo-text">Talkitout</span>
+              <span className="footer-logo-text">TalkItOut</span>
             </div>
             <p className="footer-about-text">
               Making communication simple and effective for everyone.
@@ -298,7 +302,7 @@ const Footer = () => {
           </div>
         </div>
         <div className="footer-bottom">
-          <p>© 2025 Talkitout. All rights reserved.</p>
+          <p>© 2025 TalkItOut. All rights reserved.</p>
         </div>
       </div>
     </footer>
@@ -307,9 +311,27 @@ const Footer = () => {
 
 // Main Landing Component
 const Landing = () => {
+  const [theme, setTheme] = useState(() => {
+    const savedTheme = localStorage.getItem('theme');
+    return savedTheme ? savedTheme : 'light';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('theme', theme);
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
+  };
+
   return (
-    <div className="landing-page">
-      <Navigation />
+    <div className={`landing-page ${theme}`}>
+      <Navigation theme={theme} toggleTheme={toggleTheme} />
       <Hero />
       <Stats />
       <Features />
