@@ -51,14 +51,20 @@ router.post('/tts', async (req, res) => {
       return res.status(400).json({ error: 'no text' });
     }
 
-    // create audio stream with a single retry on transient errors
-    console.log('TTS request received. text length=', (text || '').length, 'voiceId=', voiceId);
+  // create audio stream with a single retry on transient errors
+  const voiceGender = req.body.voiceGender;
+  console.log('TTS request received. text length=', (text || '').length, 'voiceId=', voiceId, 'voiceGender=', voiceGender);
+  // Map voiceGender to environment voice ids if provided
+  const defaultVoiceId = 'JBFqnCBsd6RMkjVDRZzb';
+  const maleVoiceId = process.env.ELEVEN_VOICE_MALE || defaultVoiceId;
+  const femaleVoiceId = process.env.ELEVEN_VOICE_FEMALE || defaultVoiceId;
+  let chosenVoiceId = voiceId || (voiceGender === 'male' ? maleVoiceId : femaleVoiceId);
     let attempt = 0;
     let audioS = null;
     let lastErr = null;
     while (attempt < 2) {
       try {
-        audioS = await elevenlabs.textToSpeech.convert(voiceId || 'JBFqnCBsd6RMkjVDRZzb', {
+        audioS = await elevenlabs.textToSpeech.convert(chosenVoiceId, {
           text: text,
           modelId: 'eleven_multilingual_v2',
           outputFormat: 'mp3_44100_128',

@@ -32,6 +32,13 @@ const VoiceInterface: React.FC = () => {
   const [showAnalysisPrompt, setShowAnalysisPrompt] = useState(false);
   const [pendingAudioUrl, setPendingAudioUrl] = useState<string | null>(null);
   const [playbackError, setPlaybackError] = useState<string | null>(null);
+  const [voiceGender, setVoiceGender] = useState<'female' | 'male'>(() => {
+    try {
+      const saved = localStorage.getItem('talkitout:voiceGender');
+      if (saved === 'male' || saved === 'female') return saved;
+    } catch (e) {}
+    return 'female';
+  });
   const navigate = useNavigate();
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -255,7 +262,7 @@ const VoiceInterface: React.FC = () => {
       const ttsResponse = await fetch('http://localhost:3001/api/eleven/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: aiResponse }),
+        body: JSON.stringify({ text: aiResponse, voiceGender }),
       });
       // Validate response
       if (!ttsResponse.ok) {
@@ -407,6 +414,92 @@ const VoiceInterface: React.FC = () => {
                 <button id="controlBtn" className={`control-button ${isConversationActive ? 'listening' : ''}`} onClick={toggleConversation}>
                 {isConversationActive ? 'Stop Conversation' : 'Start Conversation'}
                 </button>
+                <div style={{ marginTop: '12px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <div style={{ color: '#a1a1aa', marginRight: '8px' }}>Voice</div>
+                  <button
+                    aria-pressed={voiceGender === 'female'}
+                    onClick={() => {
+                      setVoiceGender('female');
+                      try { localStorage.setItem('talkitout:voiceGender', 'female'); } catch (e) {}
+                    }}
+                    style={{
+                      padding: '8px 12px',
+                      borderRadius: '12px',
+                      border: voiceGender === 'female' ? '1px solid rgba(251,146,60,0.9)' : '1px solid rgba(82,82,82,0.3)',
+                      background: voiceGender === 'female' ? 'linear-gradient(135deg,#f97316,#ea580c)' : 'transparent',
+                      color: voiceGender === 'female' ? 'white' : '#a1a1aa',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Female
+                  </button>
+                  <button
+                    aria-pressed={voiceGender === 'male'}
+                    onClick={() => {
+                      setVoiceGender('male');
+                      try { localStorage.setItem('talkitout:voiceGender', 'male'); } catch (e) {}
+                    }}
+                    style={{
+                      padding: '8px 12px',
+                      borderRadius: '12px',
+                      border: voiceGender === 'male' ? '1px solid rgba(251,146,60,0.9)' : '1px solid rgba(82,82,82,0.3)',
+                      background: voiceGender === 'male' ? 'linear-gradient(135deg,#f97316,#ea580c)' : 'transparent',
+                      color: voiceGender === 'male' ? 'white' : '#a1a1aa',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Male
+                  </button>
+
+                  <button
+                    className="prompt-btn"
+                    onClick={async () => {
+                      // Play a short preview with the currently selected voice
+                      await (async function playPreview() {
+                        const previewText = 'This is a preview of the selected voice.';
+                        setStatus('Previewing...');
+                        try {
+                          // If there's a pending audio url, revoke it
+                          if (pendingAudioUrl) { try { URL.revokeObjectURL(pendingAudioUrl); } catch (e) {} }
+                          const resp = await fetch('http://localhost:3001/api/eleven/tts', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ text: previewText, voiceGender }),
+                          });
+                          if (!resp.ok) {
+                            const txt = await resp.text();
+                            console.error('Preview TTS failed', resp.status, txt);
+                            setStatus('Preview failed');
+                            return;
+                          }
+                          const blob = await resp.blob();
+                          if (!blob || blob.size === 0) {
+                            setStatus('Preview returned empty audio');
+                            return;
+                          }
+                          const url = URL.createObjectURL(blob);
+                          const audio = new Audio(url);
+                          audio.volume = 1.0;
+                          try {
+                            await audio.play();
+                            audio.onended = () => { URL.revokeObjectURL(url); setStatus('Ready to listen'); };
+                          } catch (e) {
+                            // Autoplay blocked: keep pending URL so user can click Play AI response
+                            setPendingAudioUrl(url);
+                            setPlaybackError(String(e));
+                            setStatus('Preview ready - click Play');
+                          }
+                        } catch (err) {
+                          console.error('Preview TTS error', err);
+                          setStatus('Preview error');
+                        }
+                      })();
+                    }}
+                    style={{ marginLeft: '8px' }}
+                  >
+                    Play preview
+                  </button>
+                </div>
                 
                 <p id="statusText" className={`status-text ${isConversationActive ? 'active' : ''}`}>
                 {status}
