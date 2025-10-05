@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Plot from "react-plotly.js";
 import type { Data, Layout } from 'plotly.js';
 import { analyzeConversationEmotion } from '../emotionalToneDetection';
+import './EmotionVisualizer.css';
 
 // Helper to calculate a simple moving average for the volume envelope
 function movingAverage(data: Float32Array, windowSize: number): Float32Array {
@@ -197,32 +198,39 @@ export default function EmotionVisualizer() {
   };
 
   return (
-    <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
-      <h1>Emotion Visualizer</h1>
-      <p>Upload a WAV audio file to analyze its emotional content.</p>
+    <div className="visualizer-container">
+      <div className="visualizer-header">
+        <h1>Emotion Visualizer</h1>
+        <p>Upload a WAV audio file to analyze its emotional content.</p>
+      </div>
       
-      <div style={{ margin: '2rem 0', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <input type="file" accept=".wav,audio/wav" onChange={handleFileChange} />
-        <button onClick={handleAnalyzeClick} disabled={!selectedFile || status === 'loading'}>
+      <div className="controls-container">
+        <label htmlFor="file-upload" className="custom-file-upload">
+          {selectedFile ? selectedFile.name : 'Choose File'}
+        </label>
+        <input id="file-upload" type="file" accept=".wav,audio/wav" onChange={handleFileChange} />
+        <button onClick={handleAnalyzeClick} disabled={!selectedFile || status === 'loading'} className="analyze-button">
           {status === 'loading' ? 'Analyzing...' : 'Analyze Audio'}
         </button>
       </div>
 
       {status === 'error' && (
-        <div style={{ color: 'red', marginBottom: '1rem' }}>
+        <div className="error-message">
           <strong>Error:</strong> {error}
         </div>
       )}
 
-      {status === 'loading' && <p>Loading visualization...</p>}
+      {status === 'loading' && <p className="loading-message">Loading visualization...</p>}
 
       {plotData && (
-        <Plot
-          data={plotData}
-          layout={plotLayout}
-          config={{ responsive: true }}
-          style={{ width: "100%", height: "800px" }}
-        />
+        <div className="plot-container">
+          <Plot
+            data={plotData}
+            layout={plotLayout}
+            config={{ responsive: true }}
+            style={{ width: "100%", height: "100%" }}
+          />
+        </div>
       )}
     </div>
   );

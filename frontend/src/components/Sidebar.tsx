@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
-import { Link } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import './Sidebar.css';
 
 interface SidebarProps {
@@ -34,8 +34,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar }) => {
 
           <div className="sidebar-content">
             <nav className="sidebar-nav">
-              <Link to="/interview" className="nav-link">Interview</Link>
-              <Link to="/visualizer" className="nav-link">Emotion Visualizer</Link>
+              <NavLink to="/interview" className="nav-link">Interview</NavLink>
+              <NavLink to="/visualizer" className="nav-link">Emotion Visualizer</NavLink>
             </nav>
           </div>
 
