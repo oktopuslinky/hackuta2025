@@ -18,19 +18,69 @@ const VoiceInterface: React.FC = () => {
   const streamRef = useRef<MediaStream | null>(null);
   const silenceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isConversationActiveRef = useRef(isConversationActive);
-  const conversationAudioBuffersRef = useRef<AudioBuffer[]>([]);
+  const userAudioBuffersRef = useRef<AudioBuffer[]>([]);
   const isStoppingRef = useRef(false);
 
   useEffect(() => {
     isConversationActiveRef.current = isConversationActive;
   }, [isConversationActive]);
 
-  const stopConversation = () => {
+  const saveUserAudio = async () => {
+    const audioBuffers = userAudioBuffersRef.current;
+    if (!audioContextRef.current || audioBuffers.length === 0) {
+      console.log('No audio to save');
+      return;
+    }
+
+    const numberOfChannels = audioBuffers[0].numberOfChannels;
+    const sampleRate = audioBuffers[0].sampleRate;
+    const totalLength = audioBuffers.reduce((acc, buffer) => acc + buffer.length, 0);
+
+    const concatenatedBuffer = audioContextRef.current.createBuffer(
+      numberOfChannels,
+      totalLength,
+      sampleRate
+    );
+
+    let offset = 0;
+    for (const buffer of audioBuffers) {
+      for (let i = 0; i < numberOfChannels; i++) {
+        concatenatedBuffer.copyToChannel(buffer.getChannelData(i), i, offset);
+      }
+      offset += buffer.length;
+    }
+
+    const finalWav = toWav(concatenatedBuffer);
+    const finalWavBlob = new Blob([new DataView(finalWav)], { type: 'audio/wav' });
+    const finalAudioName = `user_audio_${new Date().toISOString().replace(/[:.]/g, '-')}.wav`;
+
+    // Trigger download
+    const url = URL.createObjectURL(finalWavBlob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = finalAudioName;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+
+    setShowAnalysisPrompt(true);
+    setStatus('User audio saved. Ready to view analysis.');
+  };
+
+  const stopConversation = async () => {
     isStoppingRef.current = true;
+    
+    // Stop recording if active
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       mediaRecorderRef.current.stop();
+      // The onstop handler will call saveUserAudio
     } else {
-      // If not recording, clean up immediately
+      // If not recording, save audio immediately
+      await saveUserAudio();
+      
+      // Clean up
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
       }
@@ -43,7 +93,7 @@ const VoiceInterface: React.FC = () => {
       setIsConversationActive(false);
       setStatus('Ready to listen');
       isStoppingRef.current = false;
-      conversationAudioBuffersRef.current = [];
+      userAudioBuffersRef.current = [];
     }
   };
 
@@ -62,54 +112,16 @@ const VoiceInterface: React.FC = () => {
         if (!audioContextRef.current || audioContextRef.current.state === 'closed') return;
         const arrayBuffer = await audioBlob.arrayBuffer();
         const audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
-        conversationAudioBuffersRef.current.push(audioBuffer);
+        
+        // Store user audio buffer
+        userAudioBuffersRef.current.push(audioBuffer);
 
         const wav = toWav(audioBuffer);
         const wavBlob = new Blob([new DataView(wav)], { type: 'audio/wav' });
         
-        const audioName = `segment_${new Date().toISOString().replace(/[:.]/g, '-')}.wav`;
-        // We no longer analyze segments, only the final conversation.
-        handleTranscription(wavBlob);
-
         if (isStoppingRef.current) {
-          const audioBuffers = conversationAudioBuffersRef.current;
-          if (audioContextRef.current && audioBuffers.length > 0) {
-            const numberOfChannels = audioBuffers[0].numberOfChannels;
-            const sampleRate = audioBuffers[0].sampleRate;
-            const totalLength = audioBuffers.reduce((acc, buffer) => acc + buffer.length, 0);
-
-            const concatenatedBuffer = audioContextRef.current.createBuffer(
-              numberOfChannels,
-              totalLength,
-              sampleRate
-            );
-
-            let offset = 0;
-            for (const buffer of audioBuffers) {
-              for (let i = 0; i < numberOfChannels; i++) {
-                concatenatedBuffer.copyToChannel(buffer.getChannelData(i), i, offset);
-              }
-              offset += buffer.length;
-            }
-
-            const finalWav = toWav(concatenatedBuffer);
-            const finalWavBlob = new Blob([new DataView(finalWav)], { type: 'audio/wav' });
-            const finalAudioName = `conversation_${new Date().toISOString().replace(/[:.]/g, '-')}.wav`;
-
-            // Trigger download
-            const url = URL.createObjectURL(finalWavBlob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = finalAudioName;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-
-            setShowAnalysisPrompt(true);
-            setStatus('Conversation saved. Ready to view analysis.');
-          }
+          // Save the audio
+          await saveUserAudio();
           
           // Perform cleanup after saving
           if (streamRef.current) {
@@ -126,8 +138,10 @@ const VoiceInterface: React.FC = () => {
 
           // Reset for next conversation
           isStoppingRef.current = false;
-          conversationAudioBuffersRef.current = [];
-          
+          userAudioBuffersRef.current = [];
+        } else {
+          // Continue with transcription
+          handleTranscription(wavBlob);
         }
       }
       audioChunksRef.current = [];
@@ -228,7 +242,7 @@ const VoiceInterface: React.FC = () => {
   const startConversation = async () => {
     try {
       // Reset state for a new conversation
-      conversationAudioBuffersRef.current = [];
+      userAudioBuffersRef.current = [];
       isStoppingRef.current = false;
       setTranscript('');
       setShowAnalysisPrompt(false);
@@ -265,7 +279,7 @@ const VoiceInterface: React.FC = () => {
                 <div className="logo">
                     <div className="logo-icon">
                         <svg viewBox="0 0 24 24">
-                        <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2z"/>
+                        <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
                         </svg>
                     </div>
                     TalkItOut
@@ -299,7 +313,7 @@ const VoiceInterface: React.FC = () => {
 
                 {showAnalysisPrompt && (
                   <div className="analysis-prompt">
-                    <p>Conversation saved. You can now analyze it in the visualizer.</p>
+                    <p>User audio saved. You can now analyze it in the visualizer.</p>
                     <button
                       onClick={() => navigate('/visualizer')}
                       className="prompt-btn"
