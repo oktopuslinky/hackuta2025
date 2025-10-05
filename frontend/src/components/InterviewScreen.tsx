@@ -1,5 +1,5 @@
-import { useAuth0 } from '@auth0/auth0-react';
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface Message {
   id: number;
@@ -7,13 +7,14 @@ interface Message {
   sender: 'user' | 'ai';
 }
 
-const CleanInterviewScreen = () => {
-  const { loginWithRedirect, logout, isAuthenticated } = useAuth0();
+const InterviewScreen = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -41,17 +42,40 @@ const CleanInterviewScreen = () => {
     }
   };
 
+  const handleMicClick = () => {
+    navigate('/voice-interface');
+  };
+
+  const handleFileButtonClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      console.log('Selected file:', file);
+      // You can now handle the file upload logic here
+    }
+  };
+
   return (
-    <div style={{ 
-      minHeight: '100vh', 
+    <div style={{
+      minHeight: '100vh',
       background: 'linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 50%, #1a1410 100%)',
       color: 'white',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
+      justifyContent: 'center',
       position: 'relative',
       overflow: 'hidden'
     }}>
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        style={{ display: 'none' }}
+      />
       {/* Animated background elements */}
       <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
         <div className="blob-1" style={{ 
@@ -75,6 +99,7 @@ const CleanInterviewScreen = () => {
           filter: 'blur(80px)'
         }}></div>
       </div>
+
 
       {/* Header with Login */}
       <div style={{ position: 'absolute', top: 0, right: 0, padding: '24px', zIndex: 50 }}>
@@ -119,16 +144,18 @@ const CleanInterviewScreen = () => {
 
       {showWelcome && messages.length === 0 ? (
         /* Welcome State */
-        <div style={{ 
-          flex: 1, 
-          display: 'flex', 
-          flexDirection: 'column', 
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          width: '100%', 
-          padding: '0 24px',
-          zIndex: 10 
-        }}>
+          <div style={{
+            width: '100%',
+            minHeight: '100vh',
+            background: 'linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 50%, #1a1410 100%)',
+            color: 'white',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
           {/* Logo */}
           <div className="fade-in" style={{ marginBottom: '64px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', justifyContent: 'center', marginBottom: '8px' }}>
@@ -174,7 +201,7 @@ const CleanInterviewScreen = () => {
                 border: '1px solid rgba(82, 82, 82, 0.3)',
                 padding: '16px 24px'
               }}>
-                <button style={{ color: '#a1a1aa', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }} className="icon-btn">
+                <button onClick={handleFileButtonClick} style={{ color: '#a1a1aa', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }} className="icon-btn">
                   <svg style={{ width: '20px', height: '20px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                   </svg>
@@ -205,23 +232,25 @@ const CleanInterviewScreen = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                   </svg>
                 </button>
-                <button className="mic-btn" style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #f97316, #ea580c)',
-                  border: 'none',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 4px 15px rgba(249, 115, 22, 0.3)'
-                }}>
-                  <svg style={{ width: '20px', height: '20px' }} fill="white" viewBox="0 0 24 24">
-                    <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-                    <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
-                  </svg>
-                </button>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <button onClick={handleMicClick} className={`mic-btn`} style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #f97316, #ea580c)',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 4px 15px rgba(249, 115, 22, 0.3)'
+                  }}>
+                    <svg style={{ width: '20px', height: '20px' }} fill="white" viewBox="0 0 24 24">
+                      <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                      <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -382,7 +411,7 @@ const CleanInterviewScreen = () => {
                   border: '1px solid rgba(82, 82, 82, 0.3)',
                   padding: '16px 24px'
                 }}>
-                  <button style={{ color: '#a1a1aa', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }} className="icon-btn">
+                  <button onClick={handleFileButtonClick} style={{ color: '#a1a1aa', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }} className="icon-btn">
                     <svg style={{ width: '20px', height: '20px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                     </svg>
@@ -413,23 +442,25 @@ const CleanInterviewScreen = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                     </svg>
                   </button>
-                  <button className="mic-btn" style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #f97316, #ea580c)',
-                    border: 'none',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 4px 15px rgba(249, 115, 22, 0.3)'
-                  }}>
-                    <svg style={{ width: '20px', height: '20px' }} fill="white" viewBox="0 0 24 24">
-                      <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-                      <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
-                    </svg>
-                  </button>
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <button onClick={handleMicClick} className={`mic-btn`} style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #f97316, #ea580c)',
+                      border: 'none',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 4px 15px rgba(249, 115, 22, 0.3)'
+                    }}>
+                      <svg style={{ width: '20px', height: '20px' }} fill="white" viewBox="0 0 24 24">
+                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -461,6 +492,11 @@ const CleanInterviewScreen = () => {
         @keyframes bounce {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-6px); }
+        }
+
+        .mic-btn {
+            position: relative;
+            z-index: 10;
         }
 
         .fade-in { animation: fadeIn 0.6s ease-out forwards; }
@@ -502,4 +538,4 @@ const CleanInterviewScreen = () => {
   );
 };
 
-export default CleanInterviewScreen;
+export default InterviewScreen;
