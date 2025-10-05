@@ -1,5 +1,5 @@
-import { useAuth0 } from '@auth0/auth0-react';
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface Message {
   id: number;
@@ -8,14 +8,13 @@ interface Message {
 }
 
 const InterviewScreen = () => {
-  const { loginWithRedirect, logout, isAuthenticated } = useAuth0();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [isListening, setIsListening] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -44,7 +43,7 @@ const InterviewScreen = () => {
   };
 
   const handleMicClick = () => {
-    setIsListening(prevState => !prevState);
+    navigate('/voice-interface');
   };
 
   const handleFileButtonClick = () => {
@@ -67,6 +66,7 @@ const InterviewScreen = () => {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
+      justifyContent: 'center',
       position: 'relative',
       overflow: 'hidden'
     }}>
@@ -100,59 +100,20 @@ const InterviewScreen = () => {
         }}></div>
       </div>
 
-      {/* Header with Login */}
-      <div style={{ position: 'absolute', top: 0, right: 0, padding: '24px', zIndex: 50 }}>
-        {isAuthenticated ? (
-          <button
-            onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
-            className="login-btn"
-            style={{
-              padding: '10px 24px',
-              borderRadius: '9999px',
-              background: 'linear-gradient(to right, #f97316, #ea580c)',
-              color: 'white',
-              fontWeight: 500,
-              border: 'none',
-              cursor: 'pointer',
-              transition: 'all 0.3s',
-              boxShadow: '0 4px 15px rgba(249, 115, 22, 0.25)',
-            }}
-          >
-            Log Out
-          </button>
-        ) : (
-          <button
-            onClick={() => loginWithRedirect()}
-            className="login-btn"
-            style={{
-              padding: '10px 24px',
-              borderRadius: '9999px',
-              background: 'linear-gradient(to right, #f97316, #ea580c)',
-              color: 'white',
-              fontWeight: 500,
-              border: 'none',
-              cursor: 'pointer',
-              transition: 'all 0.3s',
-              boxShadow: '0 4px 15px rgba(249, 115, 22, 0.25)',
-            }}
-          >
-            Log In
-          </button>
-        )}
-      </div>
-
       {showWelcome && messages.length === 0 ? (
         /* Welcome State */
-        <div style={{ 
-          flex: 1, 
-          display: 'flex', 
-          flexDirection: 'column', 
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          width: '100%', 
-          padding: '0 24px',
-          zIndex: 10 
-        }}>
+          <div style={{
+            width: '100%',
+            minHeight: '100vh',
+            background: 'linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 50%, #1a1410 100%)',
+            color: 'white',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
           {/* Logo */}
           <div className="fade-in" style={{ marginBottom: '64px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', justifyContent: 'center', marginBottom: '8px' }}>
@@ -230,14 +191,7 @@ const InterviewScreen = () => {
                   </svg>
                 </button>
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {isListening && (
-                    <>
-                      <div className="pulse-ring"></div>
-                      <div className="pulse-ring"></div>
-                      <div className="pulse-ring"></div>
-                    </>
-                  )}
-                  <button onClick={handleMicClick} className={`mic-btn ${isListening ? 'listening' : ''}`} style={{
+                  <button onClick={handleMicClick} className={`mic-btn`} style={{
                     width: '40px',
                     height: '40px',
                     borderRadius: '50%',
@@ -447,14 +401,7 @@ const InterviewScreen = () => {
                     </svg>
                   </button>
                   <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {isListening && (
-                      <>
-                        <div className="pulse-ring"></div>
-                        <div className="pulse-ring"></div>
-                        <div className="pulse-ring"></div>
-                      </>
-                    )}
-                    <button onClick={handleMicClick} className={`mic-btn ${isListening ? 'listening' : ''}`} style={{
+                    <button onClick={handleMicClick} className={`mic-btn`} style={{
                       width: '40px',
                       height: '40px',
                       borderRadius: '50%',
@@ -505,42 +452,9 @@ const InterviewScreen = () => {
           50% { transform: translateY(-6px); }
         }
 
-        @keyframes pulse-orange {
-            0% {
-                transform: scale(1);
-                opacity: 1;
-            }
-            100% {
-                transform: scale(2.5);
-                opacity: 0;
-            }
-        }
-
-        .pulse-ring {
-          position: absolute;
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          border: 2px solid rgba(249, 115, 22, 0.7);
-          animation: pulse-orange 2s ease-out infinite;
-          z-index: 1;
-        }
-
-        .pulse-ring:nth-child(2) {
-          animation-delay: 0.5s;
-        }
-
-        .pulse-ring:nth-child(3) {
-          animation-delay: 1s;
-        }
-
         .mic-btn {
             position: relative;
             z-index: 10;
-        }
-
-        .mic-btn.listening {
-            animation: float 3s ease-in-out infinite;
         }
 
         .fade-in { animation: fadeIn 0.6s ease-out forwards; }
