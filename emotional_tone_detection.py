@@ -3,6 +3,7 @@ import os
 import json
 from openai import OpenAI
 from dotenv import load_dotenv
+import time
 
 def extract_json_from_string(s):
     try:
@@ -158,9 +159,9 @@ def analyze_emotional_tone_detailed(audio_file_path, api_key):
     except Exception as e:
         return f"Error in detailed analysis: {str(e)}"
 
-def main():
+def main(filename):
     load_dotenv()
-    audio_files = ["Recording5.m4a", "recording5.wav"]
+    audio_files = [filename]
     audio_file = None
     
     # ensure audio files exist
@@ -174,6 +175,7 @@ def main():
         return
     
     # get api key
+    load_dotenv()
     api_key = os.getenv("GEMINI_API_KEY")
     
     if not api_key:
