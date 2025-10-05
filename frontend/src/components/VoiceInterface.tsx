@@ -2,13 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import toWav from 'audiobuffer-to-wav';
 import { useNavigate } from 'react-router-dom';
 import './VoiceInterface.css';
-import { analyzeConversationEmotion } from '../emotionalToneDetection';
+import { analyzeAudioEmotion } from '../emotionalToneDetection';
 
 const VoiceInterface: React.FC = () => {
   const [isConversationActive, setIsConversationActive] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [status, setStatus] = useState('Ready to listen');
-  const [showAnalysisPrompt, setShowAnalysisPrompt] = useState(false);
   const navigate = useNavigate();
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -68,7 +67,8 @@ const VoiceInterface: React.FC = () => {
         const wavBlob = new Blob([new DataView(wav)], { type: 'audio/wav' });
         
         const audioName = `segment_${new Date().toISOString().replace(/[:.]/g, '-')}.wav`;
-        // We no longer analyze segments, only the final conversation.
+        analyzeAudioEmotion(wavBlob, audioName);
+        
         handleTranscription(wavBlob);
 
         if (isStoppingRef.current) {
@@ -106,9 +106,6 @@ const VoiceInterface: React.FC = () => {
             a.click();
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
-
-            setShowAnalysisPrompt(true);
-            setStatus('Conversation saved. Ready to view analysis.');
           }
           
           // Perform cleanup after saving
@@ -127,7 +124,6 @@ const VoiceInterface: React.FC = () => {
           // Reset for next conversation
           isStoppingRef.current = false;
           conversationAudioBuffersRef.current = [];
-          
         }
       }
       audioChunksRef.current = [];
@@ -231,7 +227,6 @@ const VoiceInterface: React.FC = () => {
       conversationAudioBuffersRef.current = [];
       isStoppingRef.current = false;
       setTranscript('');
-      setShowAnalysisPrompt(false);
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
@@ -296,18 +291,6 @@ const VoiceInterface: React.FC = () => {
                 <p id="statusText" className={`status-text ${isConversationActive ? 'active' : ''}`}>
                 {status}
                 </p>
-
-                {showAnalysisPrompt && (
-                  <div className="analysis-prompt">
-                    <p>Conversation saved. You can now analyze it in the visualizer.</p>
-                    <button
-                      onClick={() => navigate('/visualizer')}
-                      className="prompt-btn"
-                    >
-                      Go to Visualizer
-                    </button>
-                  </div>
-                )}
 
                 <div className="quick-prompts">
                 <button className="prompt-btn">Tell me about yourself</button>
