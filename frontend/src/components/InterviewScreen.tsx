@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
 import { useNavigate } from 'react-router-dom';
 
 interface Message {
@@ -9,7 +8,6 @@ interface Message {
 }
 
 const InterviewScreen = () => {
-  const { loginWithRedirect, logout, isAuthenticated } = useAuth0();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -68,7 +66,7 @@ const InterviewScreen = () => {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      justifyContent: 'center',
+      justifyContent: showWelcome && messages.length === 0 ? 'center' : 'space-between',
       position: 'relative',
       overflow: 'hidden'
     }}>
@@ -103,46 +101,6 @@ const InterviewScreen = () => {
       </div>
 
 
-      {/* Header with Login */}
-      <div style={{ position: 'absolute', top: 0, right: 0, padding: '24px', zIndex: 50 }}>
-        {isAuthenticated ? (
-          <button
-            onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
-            className="login-btn"
-            style={{
-              padding: '10px 24px',
-              borderRadius: '9999px',
-              background: 'linear-gradient(to right, #f97316, #ea580c)',
-              color: 'white',
-              fontWeight: 500,
-              border: 'none',
-              cursor: 'pointer',
-              transition: 'all 0.3s',
-              boxShadow: '0 4px 15px rgba(249, 115, 22, 0.25)',
-            }}
-          >
-            Log Out
-          </button>
-        ) : (
-          <button
-            onClick={() => loginWithRedirect({ authorizationParams: { prompt: 'login' } })}
-            className="login-btn"
-            style={{
-              padding: '10px 24px',
-              borderRadius: '9999px',
-              background: 'linear-gradient(to right, #f97316, #ea580c)',
-              color: 'white',
-              fontWeight: 500,
-              border: 'none',
-              cursor: 'pointer',
-              transition: 'all 0.3s',
-              boxShadow: '0 4px 15px rgba(249, 115, 22, 0.25)',
-            }}
-          >
-            Log In
-          </button>
-        )}
-      </div>
 
       {showWelcome && messages.length === 0 ? (
         /* Welcome State */
@@ -347,7 +305,23 @@ const InterviewScreen = () => {
       ) : (
         /* Chat State */
         <>
-          <div style={{ flex: 1, overflowY: 'auto', width: '100%' }}>
+          <div style={{ position: 'absolute', top: '20px', left: '20px', zIndex: 20 }}>
+            <button
+              onClick={() => setMessages([])}
+              style={{
+                background: 'rgba(64, 64, 64, 0.5)',
+                color: '#d4d4d8',
+                border: '1px solid rgba(82, 82, 82, 0.3)',
+                padding: '10px 20px',
+                borderRadius: '9999px',
+                cursor: 'pointer',
+                transition: 'all 0.3s'
+              }}
+            >
+              New Chat
+            </button>
+          </div>
+          <div style={{ flex: 1, overflowY: 'auto', width: '100%', paddingTop: '80px' }}>
             <div style={{ maxWidth: '768px', margin: '0 auto', padding: '32px 24px', display: 'flex', flexDirection: 'column', gap: '24px', zIndex: 10 }}>
               {messages.map((message, idx) => (
                 <div
@@ -362,7 +336,7 @@ const InterviewScreen = () => {
                   <div style={{
                     maxWidth: '80%',
                     borderRadius: '16px',
-                    padding: '12px 20px',
+                    padding: '10px 16px',
                     background: message.sender === 'user' 
                       ? 'linear-gradient(to right, #f97316, #ea580c)'
                       : 'rgba(23, 23, 23, 0.95)',
