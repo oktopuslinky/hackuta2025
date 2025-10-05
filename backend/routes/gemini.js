@@ -32,4 +32,30 @@ Roo:`;
   }
 });
 
+router.post('/interview', async (req, res) => {
+  try {
+    const { message } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
+    const interviewPrompt = `You are an expert interview coach. Your goal is to help the user practice for their job interviews. Provide constructive feedback, ask follow-up questions, and simulate a real interview experience. Be encouraging and helpful.
+
+User: ${message}
+Coach:`;
+
+    const result = await model.generateContent(interviewPrompt);
+    const response = await result.response;
+    const text = response.text();
+
+    res.json({ response: text });
+  } catch (error) {
+    console.error('Error in Gemini interview route:', error);
+    res.status(500).json({ error: 'Failed to get response from Gemini' });
+  }
+});
+
 module.exports = router;
