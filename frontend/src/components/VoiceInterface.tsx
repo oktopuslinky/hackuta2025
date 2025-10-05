@@ -250,7 +250,7 @@ const VoiceInterface: React.FC = () => {
       });
       const geminiData = await geminiResponse.json();
       const aiResponse = geminiData.response;
-      setTranscript(prev => `${prev}\nRoo: ${aiResponse}`);
+      setTranscript(prev => `${prev}\nPeter: ${aiResponse}`);
 
       setStatus('Speaking...');
       const ttsResponse = await fetch('http://localhost:3001/api/eleven/tts', {
