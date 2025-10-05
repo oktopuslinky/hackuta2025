@@ -8,12 +8,18 @@ interface Message {
 }
 
 const CleanInterviewScreen = () => {
-  const { loginWithRedirect, logout, isAuthenticated } = useAuth0();
+  // Auth and State
+  const { loginWithRedirect, logout, isAuthenticated, getAccessTokenSilently } = useAuth0();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Audio State
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -23,6 +29,101 @@ const CleanInterviewScreen = () => {
     scrollToBottom();
   }, [messages]);
 
+  // --- Audio Handling Functions ---
+
+  const handleSendAudio = async (audioBlob: Blob) => {
+      if (!isAuthenticated) {
+          alert("Please log in to use the voice feature.");
+          setIsLoading(false);
+          return;
+      }
+      
+      setShowWelcome(false);
+      setIsLoading(true);
+      setMessages(prev => [...prev, { id: Date.now(), text: "🎤 User response recorded...", sender: 'user' }]);
+
+      const formData = new FormData();
+      formData.append('audio', audioBlob, 'user_response.webm');
+
+      try {
+          const token = await getAccessTokenSilently(); // Get auth token
+          const response = await fetch('http://localhost:3001/api/agent/analyze', {
+              method: 'POST',
+              headers: {
+                  // 'Content-Type' is set automatically by browser for FormData
+                  Authorization: `Bearer ${token}`,
+              },
+              body: formData,
+          });
+
+          if (!response.ok) {
+              const errorText = await response.text();
+              console.error("API Error Response:", errorText);
+              throw new Error(`Network response was not ok: ${response.status}`);
+          }
+
+          const data = await response.json();
+          
+          setMessages(prev => [...prev, {
+              id: Date.now(),
+              text: data.feedback || "I received your response and am ready for the next question!",
+              sender: 'ai'
+          }]);
+
+      } catch (error) {
+          console.error("Error sending audio:", error);
+          setMessages(prev => [...prev, {
+              id: Date.now(),
+              text: "Sorry, I had trouble analyzing that. Please ensure the backend is running and you are logged in.",
+              sender: 'ai'
+          }]);
+      } finally {
+          setIsLoading(false);
+      }
+  };
+
+  const toggleRecording = async () => {
+      if (!isAuthenticated) {
+          loginWithRedirect();
+          return;
+      }
+      
+      if (isRecording) {
+          // Stop recording
+          mediaRecorderRef.current?.stop();
+          setIsRecording(false);
+      } else {
+          // Start recording
+          try {
+              const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+              const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm; codecs=opus' });
+              mediaRecorderRef.current = mediaRecorder;
+              audioChunksRef.current = [];
+
+              mediaRecorder.ondataavailable = (event) => {
+                  if (event.data.size > 0) {
+                      audioChunksRef.current.push(event.data);
+                  }
+              };
+
+              mediaRecorder.onstop = () => {
+                  const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+                  handleSendAudio(audioBlob);
+                  // Stop the stream tracks to release the microphone
+                  stream.getTracks().forEach(track => track.stop()); 
+              };
+
+              mediaRecorder.start();
+              setIsRecording(true);
+          } catch (err) {
+              console.error("Error accessing microphone:", err);
+              alert("Could not access microphone. Please check permissions and ensure you are using HTTPS/localhost.");
+          }
+      }
+  };
+
+  // --- Text Handling (Kept simple for initial prompt) ---
+
   const handleSend = () => {
     if (input.trim()) {
       setShowWelcome(false);
@@ -30,16 +131,59 @@ const CleanInterviewScreen = () => {
       setInput('');
       setIsLoading(true);
       
+      // Mock AI response for text input, prompting user to use audio
       setTimeout(() => {
         setMessages(prevMessages => [...prevMessages, { 
           id: Date.now(), 
-          text: 'That\'s a great question. Let me help you prepare for that. In interviews, it\'s important to be authentic and confident.', 
+          text: 'I see you want to practice that. Please use the microphone button to record your answer to the question.', 
           sender: 'ai' 
         }]);
         setIsLoading(false);
       }, 1500);
     }
   };
+
+  // --- Helper Component for Mic Button ---
+
+  const MicButton = ({ isRecording, toggleRecording, isLoading }: { isRecording: boolean, toggleRecording: () => void, isLoading: boolean }) => (
+    <button 
+      onClick={toggleRecording} 
+      disabled={isLoading}
+      className="mic-btn" 
+      style={{
+        width: '40px',
+        height: '40px',
+        borderRadius: '50%',
+        background: isRecording 
+            ? 'linear-gradient(135deg, #ef4444, #dc2626)' // Red when recording
+            : 'linear-gradient(135deg, #f97316, #ea580c)', // Orange when idle
+        border: 'none',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: isRecording 
+            ? '0 4px 15px rgba(239, 68, 68, 0.5)'
+            : '0 4px 15px rgba(249, 115, 22, 0.3)',
+        transition: 'all 0.3s',
+        animation: isRecording ? 'pulse-record 1.5s infinite' : 'none'
+      }}
+    >
+      {isRecording ? (
+        // Stop icon (Square)
+        <svg style={{ width: '16px', height: '16px' }} fill="white" viewBox="0 0 24 24">
+          <rect x="6" y="6" width="12" height="12" rx="2"/>
+        </svg>
+      ) : (
+        // Mic icon
+        <svg style={{ width: '20px', height: '20px' }} fill="white" viewBox="0 0 24 24">
+          <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+          <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+        </svg>
+      )}
+    </button>
+  );
+
 
   return (
     <div style={{ 
@@ -205,23 +349,12 @@ const CleanInterviewScreen = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                   </svg>
                 </button>
-                <button className="mic-btn" style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #f97316, #ea580c)',
-                  border: 'none',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 4px 15px rgba(249, 115, 22, 0.3)'
-                }}>
-                  <svg style={{ width: '20px', height: '20px' }} fill="white" viewBox="0 0 24 24">
-                    <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-                    <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
-                  </svg>
-                </button>
+                {/* Mic Button in Welcome State */}
+                <MicButton 
+                    isRecording={isRecording} 
+                    toggleRecording={toggleRecording} 
+                    isLoading={isLoading} 
+                />
               </div>
             </div>
           </div>
@@ -392,7 +525,7 @@ const CleanInterviewScreen = () => {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                    placeholder="What would you like to practice today?"
+                    placeholder="Type a question or use the mic to respond..."
                     disabled={isLoading}
                     style={{
                       flex: 1,
@@ -413,23 +546,12 @@ const CleanInterviewScreen = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                     </svg>
                   </button>
-                  <button className="mic-btn" style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #f97316, #ea580c)',
-                    border: 'none',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 4px 15px rgba(249, 115, 22, 0.3)'
-                  }}>
-                    <svg style={{ width: '20px', height: '20px' }} fill="white" viewBox="0 0 24 24">
-                      <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-                      <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
-                    </svg>
-                  </button>
+                  {/* Mic Button in Chat State */}
+                  <MicButton 
+                    isRecording={isRecording} 
+                    toggleRecording={toggleRecording} 
+                    isLoading={isLoading} 
+                  />
                 </div>
               </div>
             </div>
@@ -457,6 +579,12 @@ const CleanInterviewScreen = () => {
           0%, 100% { transform: scale(1); opacity: 0.08; }
           50% { transform: scale(1.05); opacity: 0.12; }
         }
+        
+        @keyframes pulse-record {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
 
         @keyframes bounce {
           0%, 100% { transform: translateY(0); }
@@ -482,7 +610,8 @@ const CleanInterviewScreen = () => {
         .primary-btn:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(249, 115, 22, 0.5); }
         .secondary-btn:hover { background: rgba(82, 82, 82, 0.5); transform: scale(1.05); }
         .icon-btn:hover { color: #fb923c; transform: scale(1.1); }
-        .mic-btn:hover { transform: scale(1.1); box-shadow: 0 6px 20px rgba(249, 115, 22, 0.5); }
+        .mic-btn:hover:not([disabled]) { transform: scale(1.1); box-shadow: 0 6px 20px rgba(249, 115, 22, 0.5); }
+        .mic-btn[disabled] { opacity: 0.6; cursor: not-allowed; }
         .suggestion-btn:hover { background: rgba(82, 82, 82, 0.5); border-color: rgba(251, 146, 60, 0.4); color: white; transform: scale(1.05); }
         .feature-card:hover { border-color: rgba(251, 146, 60, 0.4); transform: scale(1.05); box-shadow: 0 20px 40px rgba(249, 115, 22, 0.15); }
         

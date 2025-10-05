@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const User = require('./models/User');
  const elevenRoutes = require('./eleven');
 const userRoutes = require('./routes/user');
+const agentRoutes = require('./routes/agent');
  
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('MongoDB connected successfully'))
@@ -75,6 +76,7 @@ app.get('/api/private', checkJwt, findOrCreateUser, (req, res) => {
 
 app.use('/api/eleven', elevenRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/agent', agentRoutes);
  
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
