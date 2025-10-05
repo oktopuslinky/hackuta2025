@@ -1,0 +1,183 @@
+:root {
+  --background-color: #1a1a1a;
+  --text-color: #ffffff;
+  --ai-message-bg: #2b2b2b;
+  --user-message-bg: #3a00e5;
+  --input-bg: #252525;
+  --input-border: #333333;
+  --button-bg: #3a00e5;
+  --button-hover-bg: #4a1aff;
+  --loading-dot-color: #6c757d;
+}
+
+.interview-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.message-list {
+  flex-grow: 1;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.message {
+  display: flex;
+  margin-bottom: 16px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.message.user {
+  justify-content: flex-end;
+}
+
+.message.ai {
+  justify-content: flex-start;
+}
+
+.message p {
+  max-width: 75%;
+  padding: 8px 16px;
+  border-radius: 20px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.message.user p {
+  background-color: var(--user-message-bg);
+  color: var(--text-color);
+  border-bottom-right-radius: 8px;
+}
+
+.message.ai p {
+  background-color: var(--ai-message-bg);
+  color: var(--text-color);
+  border-bottom-left-radius: 8px;
+}
+
+.input-area {
+  display: flex;
+  align-items: center;
+  padding: 16px 24px;
+  background-color: var(--background-color);
+  border-top: 1px solid var(--input-border);
+}
+
+.input-area input {
+  flex-grow: 1;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+  border: 1px solid var(--input-border);
+  border-radius: 24px;
+  padding: 8px 16px;
+  font-size: 16px;
+  margin-right: 16px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.input-area input:focus {
+  border-color: var(--button-bg);
+}
+
+.input-area input:disabled {
+  opacity: 0.5;
+}
+
+.input-area button {
+  background-color: var(--button-bg);
+  color: var(--text-color);
+  border: none;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s;
+}
+
+.input-area button:hover {
+  background-color: var(--button-hover-bg);
+}
+
+.input-area button:disabled {
+  background-color: #555;
+  cursor: not-allowed;
+}
+
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+}
+
+.loading-indicator span {
+  margin-right: 8px;
+  font-style: italic;
+  color: #888;
+}
+
+.dot-flashing {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--loading-dot-color);
+  animation: dotFlashing 1.2s infinite linear;
+}
+
+.dot-flashing::before,
+.dot-flashing::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--loading-dot-color);
+}
+
+.dot-flashing::before {
+  left: -16px;
+  animation: dotFlashing 1.2s infinite linear;
+  animation-delay: 0.2s;
+}
+
+.dot-flashing::after {
+  left: 16px;
+  animation: dotFlashing 1.2s infinite linear;
+  animation-delay: 0.4s;
+}
+
+@keyframes dotFlashing {
+  0%, 100% {
+    transform: scale(0.5);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
