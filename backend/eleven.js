@@ -51,22 +51,54 @@ router.post('/tts', async (req, res) => {
       return res.status(400).json({ error: 'no text' });
     }
 
-    //create audio stream
-    const audioS = await elevenlabs.textToSpeech.convert(voiceId || 'JBFqnCBsd6RMkjVDRZzb', {
-      text: text,
-      modelId: 'eleven_multilingual_v2',
-      outputFormat: 'mp3_44100_128',
-    });
+    // create audio stream with a single retry on transient errors
+    console.log('TTS request received. text length=', (text || '').length, 'voiceId=', voiceId);
+    let attempt = 0;
+    let audioS = null;
+    let lastErr = null;
+    while (attempt < 2) {
+      try {
+        audioS = await elevenlabs.textToSpeech.convert(voiceId || 'JBFqnCBsd6RMkjVDRZzb', {
+          text: text,
+          modelId: 'eleven_multilingual_v2',
+          outputFormat: 'mp3_44100_128',
+        });
+        lastErr = null;
+        break;
+      } catch (err) {
+        lastErr = err;
+        console.error(`TTS convert attempt ${attempt + 1} failed:`, err && err.stack ? err.stack : err);
+        attempt += 1;
+        // small backoff before retry
+        await new Promise(r => setTimeout(r, 300));
+      }
+    }
 
-    // set contet 
+    if (lastErr) {
+      console.error('TTS conversion failed after retries:', lastErr && lastErr.stack ? lastErr.stack : lastErr);
+      return res.status(500).json({ error: 'failed to convert TTS', details: String(lastErr && lastErr.message ? lastErr.message : lastErr) });
+    }
+
+    // set content type
     res.setHeader('Content-Type', 'audio/mpeg');
 
-
+    // collect chunks (audioS may be an async iterable)
     const chunksOfAudio = [];
-    for await (const chunk of audioS) {
-      chunksOfAudio.push(chunk);
+    try {
+      for await (const chunk of audioS) {
+        chunksOfAudio.push(chunk);
+      }
+    } catch (err) {
+      console.error('Error while reading TTS stream:', err && err.stack ? err.stack : err);
+      return res.status(500).json({ error: 'failed while streaming TTS', details: String(err && err.message ? err.message : err) });
     }
+
     const result = Buffer.concat(chunksOfAudio);
+    try {
+      res.setHeader('Content-Length', result.length);
+    } catch (e) {
+      // ignore header set errors
+    }
     res.send(result);
 
 
