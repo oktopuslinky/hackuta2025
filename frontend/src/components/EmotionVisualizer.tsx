@@ -40,6 +40,10 @@ interface Segment {
 interface AnalysisResult {
   timestamps: { [key: string]: string };
   secondary_emotions: string[];
+  // Additional optional fields from detailed analysis
+  wpm?: number;
+  recommendations?: string[];
+  confidence?: number;
 }
 
 export default function EmotionVisualizer() {
@@ -48,6 +52,7 @@ export default function EmotionVisualizer() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
   const [error, setError] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [detailedAnalysis, setDetailedAnalysis] = useState<AnalysisResult | null>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -67,6 +72,7 @@ export default function EmotionVisualizer() {
     setStatus('loading');
     setError(null);
     setPlotData(null);
+  setDetailedAnalysis(null);
 
     try {
       // 1. Analyze Emotion
@@ -74,6 +80,51 @@ export default function EmotionVisualizer() {
       if (!analysisData) {
         throw new Error("Failed to analyze audio. The analysis returned no data.");
       }
+      // Persist the full analysis so we can display metrics below the plot
+      // Normalize common field variants so the UI can reliably read them
+      const raw: any = analysisData as any;
+      const normalizedTimestamps = raw.timestamps && typeof raw.timestamps === 'object' ? raw.timestamps : {};
+      const normalizedSecondary = Array.isArray(raw.secondary_emotions) ? raw.secondary_emotions : (Array.isArray(raw.secondaryEmotions) ? raw.secondaryEmotions : []);
+
+      // Normalize WPM (could be a number or string)
+      let normalizedWpm: number | undefined;
+      if (raw.wpm != null) {
+        normalizedWpm = typeof raw.wpm === 'number' ? raw.wpm : parseFloat(String(raw.wpm));
+      } else if (raw.words_per_minute != null) {
+        normalizedWpm = typeof raw.words_per_minute === 'number' ? raw.words_per_minute : parseFloat(String(raw.words_per_minute));
+      }
+
+      // Normalize confidence (could be confidence, confidence_score, or a percent)
+      let normalizedConfidence: number | undefined;
+      const confidenceCandidates = [raw.confidence, raw.confidence_score, raw.confidenceScore, raw.confidencePercentage, raw['confidence_score']];
+      for (const c of confidenceCandidates) {
+        if (c == null) continue;
+        const num = typeof c === 'number' ? c : parseFloat(String(c));
+        if (!isNaN(num)) {
+          // If the model returned a percentage like 85, convert to 0.85
+          normalizedConfidence = num > 1 ? num / 100 : num;
+          break;
+        }
+      }
+
+      // Normalize recommendations (could be string or array)
+      let normalizedRecs: string[] | undefined;
+      if (Array.isArray(raw.recommendations)) {
+        normalizedRecs = raw.recommendations.map((r: any) => String(r));
+      } else if (raw.recommendations && typeof raw.recommendations === 'string') {
+        // Split into lines or sentences
+        normalizedRecs = raw.recommendations.split(/\r?\n|[\.\?!]\s+/).map((s: string) => s.trim()).filter(Boolean);
+      }
+
+      const normalized: AnalysisResult = {
+        timestamps: normalizedTimestamps,
+        secondary_emotions: normalizedSecondary,
+        wpm: normalizedWpm,
+        recommendations: normalizedRecs,
+        confidence: normalizedConfidence,
+      };
+
+      setDetailedAnalysis(normalized);
 
       // 2. Decode Audio Data
       const audioCtx = new AudioContext();
@@ -230,6 +281,37 @@ export default function EmotionVisualizer() {
             config={{ responsive: true }}
             style={{ width: "100%", height: "100%" }}
           />
+        </div>
+      )}
+
+      {/* Metrics from detailed analysis */}
+      {detailedAnalysis && (
+        <div className="analysis-metrics">
+          <h3>Analysis Metrics</h3>
+          <div className="metrics-grid">
+            <div className="metric-item">
+              <label>WPM</label>
+              <div className="metric-value">{typeof detailedAnalysis.wpm === 'number' ? detailedAnalysis.wpm.toFixed(1) : '—'}</div>
+            </div>
+            <div className="metric-item">
+              <label>Confidence</label>
+              <div className="metric-value">{typeof detailedAnalysis.confidence === 'number' ? `${(detailedAnalysis.confidence * 100).toFixed(1)}%` : '—'}</div>
+            </div>
+            <div className="metric-item metric-recs">
+              <label>Recommendations</label>
+              <div className="metric-value">
+                {Array.isArray(detailedAnalysis.recommendations) && detailedAnalysis.recommendations.length > 0 ? (
+                  <ul>
+                    {detailedAnalysis.recommendations.map((r, i) => (
+                      <li key={i}>{r}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  '—'
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

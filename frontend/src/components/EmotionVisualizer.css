@@ -109,3 +109,66 @@ input[type="file"] {
   padding: 1rem;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
+
+/* Analysis metrics below the plot */
+.analysis-metrics {
+  width: 100%;
+  margin-top: 1.25rem;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  padding: 1rem 1rem 1.25rem 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(148,163,184,0.08);
+}
+
+.analysis-metrics h3 {
+  margin: 0 0 0.75rem 0;
+  color: #ffffff;
+  font-size: 1.15rem;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.metric-item {
+  background: rgba(255,255,255,0.02);
+  padding: 0.75rem;
+  border-radius: 8px;
+  min-height: 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.metric-item label {
+  font-size: 0.85rem;
+  color: #a1a1aa;
+  margin-bottom: 0.35rem;
+}
+
+.metric-value {
+  color: #e5e7eb;
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.metric-recs .metric-value ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+/* Responsive behaviour — stack metrics on small screens */
+@media (max-width: 880px) {
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+  .plot-container {
+    height: 560px; /* reduce height to keep visible area reasonable on small screens */
+  }
+}
+
+/* Ensure the plot area has bottom spacing so metrics don't visually overlap */
+.plot-container { margin-bottom: 0.75rem; }
