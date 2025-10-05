@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
 
@@ -11,20 +11,20 @@ import Sidebar from './components/Sidebar';
 import VoiceInterface from './components/VoiceInterface';
 import EmotionVisualizer from './components/EmotionVisualizer';
 import HomePage from './components/HomePage';
+import Landing from './components/landing/landing';
 
 import './App.css';
 
-
-function App() {
+function MainApp() {
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
-   const { isAuthenticated, isLoading, user } = useAuth0();
+  const { isAuthenticated, isLoading, user } = useAuth0();
 
   useEffect(() => {
-    console.log(user)
-    console.log(isLoading)
+    console.log(user);
+    console.log(isLoading);
     if (isAuthenticated && user) {
       const addUser = async () => {
-        console.log(user)
+        console.log(user);
         try {
           const response = await fetch('http://localhost:3001/api/user', {
             method: 'POST',
@@ -42,8 +42,7 @@ function App() {
             throw new Error('Failed to add user');
           }
 
-          const data = await response.json();
-          console.log(data);
+          await response.json();
         } catch (error) {
           console.error(error);
         }
@@ -51,7 +50,7 @@ function App() {
 
       addUser();
     }
-  }, [isAuthenticated, isLoading, user]);
+  }, [isAuthenticated, user]);
 
   const toggleSidebar = () => {
     setSidebarCollapsed(!isSidebarCollapsed);
@@ -64,14 +63,25 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/interview" element={<InterviewScreen />} />
-          <Route path="/communication" element={<CommunicationScreen />} />
           <Route path="/profile" element={<ProtectedRoute component={Profile} />} />
           <Route path="/api-test" element={<ProtectedRoute component={ApiTest} />} />
           <Route path="/voice-interface/:mode" element={<VoiceInterface />} />
           <Route path="/visualizer" element={<EmotionVisualizer />} />
+          <Route path="/communication" element={<CommunicationScreen />} />
+          <Route path="/homepage" element={<HomePage />} />
+
         </Routes>
       </main>
     </div>
+  );
+};
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/landing" element={<Landing />} />
+      <Route path="/*" element={<MainApp />} />
+    </Routes>
   );
 }
 

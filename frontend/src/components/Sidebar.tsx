@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import './Sidebar.css';
 
 interface SidebarProps {
@@ -14,7 +14,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar }) => {
   return (
     <div className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
-        {!isCollapsed && <div className="logo">TalkItOut</div>}
+        {!isCollapsed && <Link to="/landing" className="logo-link"><div className="logo">TalkItOut</div></Link>}
         <button className="collapse-btn" onClick={toggleSidebar}>
           {isCollapsed ? '→' : '←'}
         </button>
