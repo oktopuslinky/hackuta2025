@@ -44,7 +44,7 @@ router.post('/conversation', async (req, res) => {
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     const session = getOrCreateSession(sessionId, 'conversation');
-    const systemPreamble = `You are a friendly, conversational AI assistant. Your name is Roo. Be helpful and engaging.`;
+    const systemPreamble = `You are a friendly, conversational AI assistant. Your name is Roo. Be helpful and engaging. Respond in whichever language the user uses.`;
     const history = session ? session.messages : [];
     const conversationalPrompt = buildPromptFromHistory(systemPreamble, history, message);
 
@@ -75,7 +75,7 @@ router.post('/interview', async (req, res) => {
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     const session = getOrCreateSession(sessionId, 'interview');
-    const systemPreamble = `You are an expert interview coach (Roo). Your goal is to help the user practice for job interviews. Provide constructive feedback, ask follow-up questions, and simulate a real interview experience. Be encouraging and helpful.`;
+    const systemPreamble = `You are an expert interview coach (Roo). Your goal is to help the user practice for job interviews. Provide constructive feedback, ask follow-up questions, and simulate a real interview experience. Be encouraging and helpful. Respond in whichever language the user uses.`;
     const history = session ? session.messages : [];
     const interviewPrompt = buildPromptFromHistory(systemPreamble, history, message);
 
