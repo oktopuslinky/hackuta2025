@@ -61,7 +61,7 @@ function MainApp() {
       <Sidebar isCollapsed={isSidebarCollapsed} toggleSidebar={toggleSidebar} />
       <main className="main-content">
         <Routes>
-          <Route path="/" element={<InterviewScreen />} />
+          <Route path="/" element={<HomePage />} />
           <Route path="/interview" element={<InterviewScreen />} />
           <Route path="/profile" element={<ProtectedRoute component={Profile} />} />
           <Route path="/api-test" element={<ProtectedRoute component={ApiTest} />} />

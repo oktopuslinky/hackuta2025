@@ -137,3 +137,7 @@
   color: white;
   box-shadow: 0 4px 15px rgba(249, 115, 22, 0.25);
 }
+.logo-link {
+  text-decoration: none;
+  color: inherit;
+}
