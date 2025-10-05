@@ -932,3 +932,50 @@
   color: #9ca3af;
   font-size: 0.875rem;
 }
+/* Theme Toggle Button */
+.theme-toggle-button {
+  position: relative;
+  width: 2.5rem;
+  height: 2.5rem;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-toggle-button:hover {
+  transform: scale(1.1);
+}
+
+.theme-icon {
+  position: absolute;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  color: #f97316;
+}
+
+.dark .theme-icon {
+  color: #fb923c;
+}
+
+.sun-icon {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+
+.moon-icon {
+  opacity: 0;
+  transform: scale(0) rotate(-90deg);
+}
+
+.dark .sun-icon {
+  opacity: 0;
+  transform: scale(0) rotate(90deg);
+}
+
+.dark .moon-icon {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}

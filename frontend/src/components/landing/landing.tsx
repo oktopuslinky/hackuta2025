@@ -23,7 +23,7 @@ const LogoIcon = ({ className }: { className?: string }) => (
 );
 
 // Navigation Component
-const Navigation = ({ theme, toggleTheme }: { theme: string, toggleTheme: () => void }) => {
+const Navigation = ({ toggleTheme }: { toggleTheme: () => void }) => {
   const [scrolled, setScrolled] = useState(false);
   const { loginWithRedirect } = useAuth0();
 
@@ -49,8 +49,8 @@ const Navigation = ({ theme, toggleTheme }: { theme: string, toggleTheme: () => 
               </button>
             </div>
             <button onClick={toggleTheme} className="theme-toggle-button">
-              <Sun className={`theme-icon sun-icon ${theme === 'dark' ? 'hidden' : ''}`} />
-              <Moon className={`theme-icon moon-icon ${theme === 'light' ? 'hidden' : ''}`} />
+              <Sun className="theme-icon sun-icon" />
+              <Moon className="theme-icon moon-icon" />
             </button>
             <Link to="/app" style={{ textDecoration: 'none' }}>
               <button className="open-chat-button">
@@ -329,7 +329,7 @@ const Landing = () => {
 
   return (
     <div className={`landing-page ${theme}`}>
-      <Navigation theme={theme} toggleTheme={toggleTheme} />
+      <Navigation toggleTheme={toggleTheme} />
       <Hero />
       <Stats />
       <Features />
