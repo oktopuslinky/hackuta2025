@@ -2,10 +2,31 @@ import React, { useState, useRef, useEffect } from 'react';
 import toWav from 'audiobuffer-to-wav';
 import { useNavigate, useParams } from 'react-router-dom';
 import './VoiceInterface.css';
-import { analyzeConversationEmotion } from '../emotionalToneDetection';
+// Removed unused import to fix lint error
 
 const VoiceInterface: React.FC = () => {
   const { mode } = useParams();
+  const generateSessionId = () => {
+    if (typeof window !== 'undefined' && (window as any).crypto) {
+      const cryptoObj = (window as any).crypto;
+      if (typeof cryptoObj.randomUUID === 'function') {
+        return cryptoObj.randomUUID();
+      }
+      const buf = new Uint8Array(16);
+      cryptoObj.getRandomValues(buf);
+      buf[6] = (buf[6] & 0x0f) | 0x40;
+      buf[8] = (buf[8] & 0x3f) | 0x80;
+      const toHex = (n: number) => n.toString(16).padStart(2, '0');
+      return (
+        toHex(buf[0]) + toHex(buf[1]) + toHex(buf[2]) + toHex(buf[3]) + '-' +
+        toHex(buf[4]) + toHex(buf[5]) + '-' +
+        toHex(buf[6]) + toHex(buf[7]) + '-' +
+        toHex(buf[8]) + toHex(buf[9]) + '-' +
+        toHex(buf[10]) + toHex(buf[11]) + toHex(buf[12]) + toHex(buf[13]) + toHex(buf[14]) + toHex(buf[15])
+      );
+    }
+    return Math.random().toString(36).slice(2);
+  };
   const [isConversationActive, setIsConversationActive] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [status, setStatus] = useState('Ready to listen');
@@ -211,10 +232,19 @@ const VoiceInterface: React.FC = () => {
         ? 'http://localhost:3001/api/gemini/interview'
         : 'http://localhost:3001/api/gemini/conversation';
 
+      const key = `talkitout:session:${mode === 'interview' ? 'interview' : 'conversation'}`;
+      const existingSessionId = localStorage.getItem(key);
+      let sessionId: string;
+      if (existingSessionId) {
+        sessionId = existingSessionId;
+      } else {
+        sessionId = generateSessionId();
+        localStorage.setItem(key, sessionId);
+      }
       const geminiResponse = await fetch(geminiEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userTranscript }),
+        body: JSON.stringify({ message: userTranscript, sessionId }),
       });
       const geminiData = await geminiResponse.json();
       const aiResponse = geminiData.response;
@@ -230,7 +260,11 @@ const VoiceInterface: React.FC = () => {
       const ttsAudioBlob = await ttsResponse.blob();
       const audioUrl = URL.createObjectURL(ttsAudioBlob);
       const audio = new Audio(audioUrl);
-      audio.play();
+      try {
+        await audio.play();
+      } catch (e) {
+        console.warn('Autoplay blocked, awaiting user interaction to play audio.');
+      }
       audio.onended = () => {
         if (isConversationActiveRef.current) {
           startRecording();

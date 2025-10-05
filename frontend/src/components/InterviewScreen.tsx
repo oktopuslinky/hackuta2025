@@ -8,6 +8,27 @@ interface Message {
 }
 
 const CleanInterviewScreen = () => {
+  const generateSessionId = () => {
+    if (typeof window !== 'undefined' && (window as any).crypto) {
+      const cryptoObj = (window as any).crypto;
+      if (typeof cryptoObj.randomUUID === 'function') {
+        return cryptoObj.randomUUID();
+      }
+      const buf = new Uint8Array(16);
+      cryptoObj.getRandomValues(buf);
+      buf[6] = (buf[6] & 0x0f) | 0x40;
+      buf[8] = (buf[8] & 0x3f) | 0x80;
+      const toHex = (n: number) => n.toString(16).padStart(2, '0');
+      return (
+        toHex(buf[0]) + toHex(buf[1]) + toHex(buf[2]) + toHex(buf[3]) + '-' +
+        toHex(buf[4]) + toHex(buf[5]) + '-' +
+        toHex(buf[6]) + toHex(buf[7]) + '-' +
+        toHex(buf[8]) + toHex(buf[9]) + '-' +
+        toHex(buf[10]) + toHex(buf[11]) + toHex(buf[12]) + toHex(buf[13]) + toHex(buf[14]) + toHex(buf[15])
+      );
+    }
+    return Math.random().toString(36).slice(2);
+  };
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -49,12 +70,18 @@ const CleanInterviewScreen = () => {
       setIsLoading(true);
 
       try {
+        const key = 'talkitout:session:interview';
+        let sessionId = localStorage.getItem(key);
+        if (!sessionId) {
+          sessionId = generateSessionId();
+          localStorage.setItem(key, sessionId);
+        }
         const response = await fetch('http://localhost:3001/api/gemini/interview', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ message: input }),
+          body: JSON.stringify({ message: input, sessionId }),
         });
 
         if (!response.ok) {
