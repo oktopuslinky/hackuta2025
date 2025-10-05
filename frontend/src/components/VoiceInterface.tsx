@@ -17,6 +17,7 @@ const VoiceInterface: React.FC = () => {
   const silenceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isConversationActiveRef = useRef(isConversationActive);
 
+
   useEffect(() => {
     isConversationActiveRef.current = isConversationActive;
   }, [isConversationActive]);
@@ -37,7 +38,7 @@ const VoiceInterface: React.FC = () => {
     setIsConversationActive(false);
     setStatus('Ready to listen');
   };
-
+// h
   const startRecording = () => {
     if (!streamRef.current) return;
     setStatus('Listening...');
