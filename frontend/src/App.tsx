@@ -4,7 +4,11 @@ import Profile from './components/Profile';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import ApiTest from './components/ApiTest';
 import InterviewScreen from './components/InterviewScreen';
+
 import Sidebar from './components/Sidebar';
+
+import VoiceMode from './components/VoiceMode';
+
 import './App.css';
 
 function App() {
@@ -15,6 +19,7 @@ function App() {
   };
 
   return (
+
     <div className={`app-layout ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       <Sidebar isCollapsed={isSidebarCollapsed} toggleSidebar={toggleSidebar} />
       <main className="main-content">
@@ -26,6 +31,7 @@ function App() {
         </Routes>
       </main>
     </div>
+
   );
 }
 
