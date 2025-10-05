@@ -1,5 +1,5 @@
-import { useAuth0 } from '@auth0/auth0-react';
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface Message {
   id: number;
@@ -8,12 +8,29 @@ interface Message {
 }
 
 const CleanInterviewScreen = () => {
-  const { loginWithRedirect, logout, isAuthenticated } = useAuth0();
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileButtonClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      console.log('Selected file:', files[0]);
+      // Handle the file upload logic here
+    }
+  };
+
+  const handleMicButtonClick = () => {
+    navigate('/voice-interface');
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -76,46 +93,6 @@ const CleanInterviewScreen = () => {
         }}></div>
       </div>
 
-      {/* Header with Login */}
-      <div style={{ position: 'absolute', top: 0, right: 0, padding: '24px', zIndex: 50 }}>
-        {isAuthenticated ? (
-          <button
-            onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
-            className="login-btn"
-            style={{
-              padding: '10px 24px',
-              borderRadius: '9999px',
-              background: 'linear-gradient(to right, #f97316, #ea580c)',
-              color: 'white',
-              fontWeight: 500,
-              border: 'none',
-              cursor: 'pointer',
-              transition: 'all 0.3s',
-              boxShadow: '0 4px 15px rgba(249, 115, 22, 0.25)',
-            }}
-          >
-            Log Out
-          </button>
-        ) : (
-          <button
-            onClick={() => loginWithRedirect({ authorizationParams: { prompt: 'login' } })}
-            className="login-btn"
-            style={{
-              padding: '10px 24px',
-              borderRadius: '9999px',
-              background: 'linear-gradient(to right, #f97316, #ea580c)',
-              color: 'white',
-              fontWeight: 500,
-              border: 'none',
-              cursor: 'pointer',
-              transition: 'all 0.3s',
-              boxShadow: '0 4px 15px rgba(249, 115, 22, 0.25)',
-            }}
-          >
-            Log In
-          </button>
-        )}
-      </div>
 
       {showWelcome && messages.length === 0 ? (
         /* Welcome State */
@@ -174,7 +151,13 @@ const CleanInterviewScreen = () => {
                 border: '1px solid rgba(82, 82, 82, 0.3)',
                 padding: '16px 24px'
               }}>
-                <button style={{ color: '#a1a1aa', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }} className="icon-btn">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  style={{ display: 'none' }}
+                  onChange={handleFileChange}
+                />
+                <button onClick={handleFileButtonClick} style={{ color: '#a1a1aa', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }} className="icon-btn">
                   <svg style={{ width: '20px', height: '20px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                   </svg>
@@ -205,7 +188,7 @@ const CleanInterviewScreen = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                   </svg>
                 </button>
-                <button className="mic-btn" style={{
+                <button onClick={handleMicButtonClick} className="mic-btn" style={{
                   width: '40px',
                   height: '40px',
                   borderRadius: '50%',
@@ -382,7 +365,13 @@ const CleanInterviewScreen = () => {
                   border: '1px solid rgba(82, 82, 82, 0.3)',
                   padding: '16px 24px'
                 }}>
-                  <button style={{ color: '#a1a1aa', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }} className="icon-btn">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    style={{ display: 'none' }}
+                    onChange={handleFileChange}
+                  />
+                  <button onClick={handleFileButtonClick} style={{ color: '#a1a1aa', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }} className="icon-btn">
                     <svg style={{ width: '20px', height: '20px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                     </svg>
@@ -413,7 +402,7 @@ const CleanInterviewScreen = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                     </svg>
                   </button>
-                  <button className="mic-btn" style={{
+                  <button onClick={handleMicButtonClick} className="mic-btn" style={{
                     width: '40px',
                     height: '40px',
                     borderRadius: '50%',
