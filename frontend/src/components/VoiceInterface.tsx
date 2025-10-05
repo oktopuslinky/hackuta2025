@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import toWav from 'audiobuffer-to-wav';
 import { useNavigate } from 'react-router-dom';
 import './VoiceInterface.css';
+import { analyzeAudioEmotion } from '../emotionalToneDetection';
 
 const VoiceInterface: React.FC = () => {
   const [isConversationActive, setIsConversationActive] = useState(false);
@@ -16,26 +17,33 @@ const VoiceInterface: React.FC = () => {
   const streamRef = useRef<MediaStream | null>(null);
   const silenceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isConversationActiveRef = useRef(isConversationActive);
+  const conversationAudioBuffersRef = useRef<AudioBuffer[]>([]);
+  const isStoppingRef = useRef(false);
 
   useEffect(() => {
     isConversationActiveRef.current = isConversationActive;
   }, [isConversationActive]);
 
   const stopConversation = () => {
+    isStoppingRef.current = true;
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       mediaRecorderRef.current.stop();
+    } else {
+      // If not recording, clean up immediately
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
+      if (silenceTimeoutRef.current) {
+        clearTimeout(silenceTimeoutRef.current);
+      }
+      setIsConversationActive(false);
+      setStatus('Ready to listen');
+      isStoppingRef.current = false;
+      conversationAudioBuffersRef.current = [];
     }
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-    }
-    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-      audioContextRef.current.close();
-    }
-    if (silenceTimeoutRef.current) {
-      clearTimeout(silenceTimeoutRef.current);
-    }
-    setIsConversationActive(false);
-    setStatus('Ready to listen');
   };
 
   const startRecording = () => {
@@ -53,9 +61,70 @@ const VoiceInterface: React.FC = () => {
         if (!audioContextRef.current || audioContextRef.current.state === 'closed') return;
         const arrayBuffer = await audioBlob.arrayBuffer();
         const audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
+        conversationAudioBuffersRef.current.push(audioBuffer);
+
         const wav = toWav(audioBuffer);
         const wavBlob = new Blob([new DataView(wav)], { type: 'audio/wav' });
+        
+        const audioName = `segment_${new Date().toISOString().replace(/[:.]/g, '-')}.wav`;
+        analyzeAudioEmotion(wavBlob, audioName);
+        
         handleTranscription(wavBlob);
+
+        if (isStoppingRef.current) {
+          const audioBuffers = conversationAudioBuffersRef.current;
+          if (audioContextRef.current && audioBuffers.length > 0) {
+            const numberOfChannels = audioBuffers[0].numberOfChannels;
+            const sampleRate = audioBuffers[0].sampleRate;
+            const totalLength = audioBuffers.reduce((acc, buffer) => acc + buffer.length, 0);
+
+            const concatenatedBuffer = audioContextRef.current.createBuffer(
+              numberOfChannels,
+              totalLength,
+              sampleRate
+            );
+
+            let offset = 0;
+            for (const buffer of audioBuffers) {
+              for (let i = 0; i < numberOfChannels; i++) {
+                concatenatedBuffer.copyToChannel(buffer.getChannelData(i), i, offset);
+              }
+              offset += buffer.length;
+            }
+
+            const finalWav = toWav(concatenatedBuffer);
+            const finalWavBlob = new Blob([new DataView(finalWav)], { type: 'audio/wav' });
+            const finalAudioName = `conversation_${new Date().toISOString().replace(/[:.]/g, '-')}.wav`;
+
+            // Trigger download
+            const url = URL.createObjectURL(finalWavBlob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = finalAudioName;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+          }
+          
+          // Perform cleanup after saving
+          if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+          }
+          if (audioContextRef.current) {
+            audioContextRef.current.close();
+          }
+          if (silenceTimeoutRef.current) {
+            clearTimeout(silenceTimeoutRef.current);
+          }
+          setIsConversationActive(false);
+          setStatus('Ready to listen');
+
+          // Reset for next conversation
+          isStoppingRef.current = false;
+          conversationAudioBuffersRef.current = [];
+        }
       }
       audioChunksRef.current = [];
     };
@@ -154,6 +223,11 @@ const VoiceInterface: React.FC = () => {
 
   const startConversation = async () => {
     try {
+      // Reset state for a new conversation
+      conversationAudioBuffersRef.current = [];
+      isStoppingRef.current = false;
+      setTranscript('');
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       audioContextRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
