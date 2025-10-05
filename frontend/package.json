@@ -12,6 +12,7 @@
   "dependencies": {
     "@auth0/auth0-react": "^2.5.0",
     "@types/react-plotly.js": "^2.6.3",
+    "audiobuffer-to-wav": "^1.0.0",
     "kill-port": "^2.0.1",
     "plotly.js": "^3.1.1",
     "react": "^19.1.1",
@@ -22,6 +23,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
+    "@types/audiobuffer-to-wav": "^1.0.4",
     "@types/node": "^24.6.0",
     "@types/react": "^19.1.16",
     "@types/react-dom": "^19.1.9",

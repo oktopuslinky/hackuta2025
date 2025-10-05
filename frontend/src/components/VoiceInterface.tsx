@@ -1,24 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import toWav from 'audiobuffer-to-wav';
 import { useNavigate } from 'react-router-dom';
 import './VoiceInterface.css';
 
 const VoiceInterface: React.FC = () => {
   const [isListening, setIsListening] = useState(false);
   const navigate = useNavigate();
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   const toggleListening = () => {
     if (!isListening) {
-      // This is just for the animation, no real functionality
-      // It will trigger the browser's permission prompt.
       navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(() => {
-          console.log("Microphone permission granted");
+        .then(stream => {
+          const mediaRecorder = new MediaRecorder(stream);
+          mediaRecorderRef.current = mediaRecorder;
+          mediaRecorder.ondataavailable = event => {
+            audioChunksRef.current.push(event.data);
+          };
+          mediaRecorder.start();
+          setIsListening(true);
         })
-        .catch(() => {
-          console.log("Microphone permission denied");
+        .catch(err => {
+          console.error("Error accessing microphone:", err);
         });
+    } else {
+      if (mediaRecorderRef.current) {
+        mediaRecorderRef.current.stop();
+        mediaRecorderRef.current.onstop = async () => {
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          const audioContext = new AudioContext();
+          const arrayBuffer = await audioBlob.arrayBuffer();
+          const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+          const wav = toWav(audioBuffer);
+          const wavBlob = new Blob([new DataView(wav)], { type: 'audio/wav' });
+          const audioUrl = URL.createObjectURL(wavBlob);
+
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = audioUrl;
+          a.download = 'audio.wav';
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(audioUrl);
+          audioChunksRef.current = [];
+        };
+      }
+      setIsListening(false);
     }
-    setIsListening(prevState => !prevState);
   };
 
   return (
