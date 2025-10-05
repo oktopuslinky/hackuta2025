@@ -34,8 +34,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar }) => {
 
           <div className="sidebar-content">
             <nav className="sidebar-nav">
-              <NavLink to="/interview" className="nav-link">Interview</NavLink>
-              <NavLink to="/visualizer" className="nav-link">Emotion Visualizer</NavLink>
+              <NavLink to="/" className="nav-link">Homepage</NavLink>
+              <NavLink to="/interview" className="nav-link">Interview Prep</NavLink>
+              <NavLink to="/communication" className="nav-link">Communication Practice</NavLink>
+              <NavLink to="/visualizer" className="nav-link">Audio Visualizer</NavLink>
             </nav>
           </div>
 

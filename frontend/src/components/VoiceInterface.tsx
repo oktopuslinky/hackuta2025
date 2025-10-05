@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import toWav from 'audiobuffer-to-wav';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import './VoiceInterface.css';
 import { analyzeConversationEmotion } from '../emotionalToneDetection';
 
 const VoiceInterface: React.FC = () => {
+  const { mode } = useParams();
   const [isConversationActive, setIsConversationActive] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [status, setStatus] = useState('Ready to listen');
@@ -206,7 +207,11 @@ const VoiceInterface: React.FC = () => {
       setTranscript(prev => `${prev}\nUser: ${userTranscript}`);
       setStatus('Thinking...');
 
-      const geminiResponse = await fetch('http://localhost:3001/api/gemini/conversation', {
+      const geminiEndpoint = mode === 'interview'
+        ? 'http://localhost:3001/api/gemini/interview'
+        : 'http://localhost:3001/api/gemini/conversation';
+
+      const geminiResponse = await fetch(geminiEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: userTranscript }),

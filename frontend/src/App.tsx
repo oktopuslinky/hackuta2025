@@ -7,9 +7,11 @@ import Profile from './components/Profile';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import ApiTest from './components/ApiTest';
 import InterviewScreen from './components/InterviewScreen';
+import CommunicationScreen from './components/CommunicationScreen';
 import Sidebar from './components/Sidebar';
 import VoiceInterface from './components/VoiceInterface';
 import EmotionVisualizer from './components/EmotionVisualizer';
+import HomePage from './components/HomePage';
 
 import './App.css';
 
@@ -61,11 +63,12 @@ function App() {
       <Sidebar isCollapsed={isSidebarCollapsed} toggleSidebar={toggleSidebar} />
       <main className="main-content">
         <Routes>
-          <Route path="/" element={<InterviewScreen />} />
+          <Route path="/" element={<HomePage />} />
           <Route path="/interview" element={<InterviewScreen />} />
+          <Route path="/communication" element={<CommunicationScreen />} />
           <Route path="/profile" element={<ProtectedRoute component={Profile} />} />
           <Route path="/api-test" element={<ProtectedRoute component={ApiTest} />} />
-          <Route path="/voice-interface" element={<VoiceInterface />} />
+          <Route path="/voice-interface/:mode" element={<VoiceInterface />} />
           <Route path="/visualizer" element={<EmotionVisualizer />} />
         </Routes>
       </main>

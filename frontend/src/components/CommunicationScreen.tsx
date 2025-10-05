@@ -7,7 +7,7 @@ interface Message {
   sender: 'user' | 'ai';
 }
 
-const CleanInterviewScreen = () => {
+const CommunicationScreen = () => {
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -23,13 +23,13 @@ const CleanInterviewScreen = () => {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0) {
-      console.log('Selected file:', files[0]);
+      console.log('Selected file:', files);
       // Handle the file upload logic here
     }
   };
 
   const handleMicButtonClick = () => {
-    navigate('/voice-interface/interview');
+    navigate('/voice-interface/communication');
   };
 
   const scrollToBottom = () => {
@@ -49,7 +49,7 @@ const CleanInterviewScreen = () => {
       setIsLoading(true);
 
       try {
-        const response = await fetch('http://localhost:3001/api/gemini/interview', {
+        const response = await fetch('http://localhost:3001/api/gemini/conversation', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -152,7 +152,7 @@ const CleanInterviewScreen = () => {
               </span>
             </div>
             <p className="fade-in-delay" style={{ textAlign: 'center', color: '#a1a1aa', marginTop: '12px', fontSize: '18px' }}>
-              Your AI-powered interview coach
+              Your AI-powered communication coach
             </p>
           </div>
 
@@ -250,7 +250,7 @@ const CleanInterviewScreen = () => {
                   Practice with Confidence
                 </h3>
                 <p style={{ fontSize: '14px', color: '#a1a1aa', lineHeight: '1.6' }}>
-                  Get personalized feedback and improve your interview skills in a supportive environment.
+                  Get personalized feedback and improve your communication skills in a supportive environment.
                 </p>
               </div>
             </div>
@@ -511,4 +511,4 @@ const CleanInterviewScreen = () => {
   );
 };
 
-export default CleanInterviewScreen;
+export default CommunicationScreen;
